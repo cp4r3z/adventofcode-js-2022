@@ -1,0 +1,24 @@
+{
+  "name": "adventofcode-js-2022",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "dependencies": {},
+  "devDependencies": {
+    "jest": "^29.6.2"
+  },
+  "scripts": {
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cp4r3z/adventofcode-js-2022.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/cp4r3z/adventofcode-js-2022/issues"
+  },
+  "homepage": "https://github.com/cp4r3z/adventofcode-js-2022#readme"
+}
