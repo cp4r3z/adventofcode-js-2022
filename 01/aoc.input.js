@@ -5,7 +5,7 @@ import { promises as fs } from 'fs';
 async function readIfExists(path) {
     try {
         await fs.access(path);
-        return await fs.readFile(path, 'utf8'); // Top level await!? Coool...
+        return await fs.readFile(path, 'utf8');
     } catch {
         return '';
     }

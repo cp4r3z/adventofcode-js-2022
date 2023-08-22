@@ -6,11 +6,8 @@
         "outDir": "./out",
         "sourceMap": true,
         "skipLibCheck": true,
-        "lib": ["ES2021"]
-        // ... other options
-        // "lib": [
-        //     // ... other libs
-        //     "ES2021.String"
-        // ]
+        "lib": [
+            "ES2021"
+        ]
     }
 }
