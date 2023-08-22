@@ -1,5 +1,5 @@
 import { jest } from '@jest/globals';
-import { part1, part2 } from './aoc';
+import { part1, part2 } from '../out/01/aoc';
 import { input, tinput } from './aoc.input';
 
 describe('Day 1: Calorie Counting: Part 1', () => {

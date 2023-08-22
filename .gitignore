@@ -3,6 +3,12 @@ input.txt
 
 # Boilerplate ...
 
+# VS Code
+.vscode
+
+# Typescript
+*.map
+
 # Logs
 logs
 *.log
