@@ -1,0 +1,32 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "command": "npm test ${fileDirnameBasename}",
+            "name": "npm run test (node-terminal)",
+            "request": "launch",
+            "type": "node-terminal",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            //"preLaunchTask": "tsc: build - tsconfig.json",                      
+        },
+        {
+            "name": "npm run test (node)",
+            "type": "node",
+            "request": "launch",
+            "runtimeArgs": [
+                "test",
+                "${fileDirnameBasename}"                
+            ],
+            "runtimeExecutable": "npm",                        
+            "skipFiles": [
+                "<node_internals>/**"
+            ],            
+            //"preLaunchTask": "tsc: build - tsconfig.json",
+        }
+    ]
+}

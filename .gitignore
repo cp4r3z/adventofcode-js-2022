@@ -4,7 +4,8 @@ input.txt
 # Boilerplate ...
 
 # VS Code
-.vscode
+# Debatably, this shouldn't get checked in... but it's just me.
+#.vscode
 
 # Typescript
 *.map
