@@ -74,22 +74,27 @@ class Item {
         let partial = '';
 
         input.split('')
-        .slice(1) // remove first ?
-        .forEach(element => {
-            if (element === '[') {
-                bracketDepth++;
-            }
-            else if (element === ']') {
-                bracketDepth--;
-            }
-            else if (element === ',' && bracketDepth === 0) {
-                this.children.push(new Item(partial));
-                partial = '';
-                return;
-            }
-            partial += element;
-        });
-        this.children.push(new Item(partial)); // push last partial
+            .slice(1) // remove first bracket
+            .forEach(element => {
+                if (element === '[') {
+                    bracketDepth++;
+                }
+                else if (element === ']') {
+                    bracketDepth--;
+                }
+                else if (element === ',' && bracketDepth === 0) {
+                    this.children.push(new Item(partial));
+                    partial = '';
+                    return;
+                }
+                partial += element;
+            });
+
+        // Push last partial
+        partial = partial.slice(0, -1); // remove last bracket
+        if (partial !== '') {
+            this.children.push(new Item(partial));
+        }
     }
 }
 
