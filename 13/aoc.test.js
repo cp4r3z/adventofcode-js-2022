@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals';
 import { part1, part2 } from '../out/13/aoc';
-import { input, tinput,tinputLine } from './aoc.input';
+import { input, tinput } from './aoc.input';
 
 describe('Day 13', () => {
     it('Part 1', async () => {
