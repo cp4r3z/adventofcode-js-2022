@@ -4,14 +4,14 @@ import { input, tinput } from './aoc.input';
 
 describe('Day 13', () => {
     it('Part 1', async () => {
-        expect(part1(tinput)).toBe(13);
-        const solution = part1(input);
+        const solution = part1(tinput);
         console.log(solution);
+        expect(solution).toBe(13);
     });
 
     it('Part 2', async () => {
-        expect(part2(tinput)).toBe(140);
-        const solution = part2(input);
+        const solution = part2(tinput);
         console.log(solution);
+        expect(solution).toBe(140);
     });
 });
