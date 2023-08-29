@@ -2,20 +2,16 @@ import { jest } from '@jest/globals';
 import { part1, part2 } from '../out/13/aoc';
 import { input, tinput,tinputLine } from './aoc.input';
 
-describe('Day 13: Part 1', () => {
-    it('Splitter', async () => {
-        //part1('[[1],[2,3,4]]');
-        part1('[1,[2,[3,[4,[5,6,7]]]],8,9]');
-        //expect('[[1],[2,3,4]]').toBe(24000);
+describe('Day 13', () => {
+    it('Part 1', async () => {
+        expect(part1(tinput)).toBe(13);
+        const solution = part1(input);
+        console.log(solution);
     });
 
-    xit('Part 1', async () => {
-        expect(part1(tinput)).toBe(24000);
+    it('Part 2', async () => {
+        expect(part2(tinput)).toBe(140);
+        const solution = part2(input);
+        console.log(solution);
     });
 });
-
-// xdescribe('Day 1: Calorie Counting: Part 2', () => {
-//     test('Test 1', () => {
-//         expect(part2(tinput)).toBe(45000);
-//     });
-// });

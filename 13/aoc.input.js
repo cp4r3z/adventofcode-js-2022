@@ -17,10 +17,6 @@ let fileName = 'tinput.txt';
 let filePath = path.resolve(__dirname, fileName);
 export const tinput = await readIfExists(filePath);
 
-fileName = 'tinput_line.txt';
-filePath = path.resolve(__dirname, fileName);
-export const tinputLine = await readIfExists(filePath);
-
 fileName = 'input.txt';
 filePath = path.resolve(__dirname, fileName);
 export const input = await readIfExists(filePath);

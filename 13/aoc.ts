@@ -1,42 +1,19 @@
-const splitter = (list: string): string[] => {
-    if (list.charAt(0) !== '[') {
-        throw new Error('Invalid list: does not start with [');
-    }
-
-    const outArray = [];
-    let bracketDepth = 0;
-    let partialList = '';
-    list.split('')
-        .slice(1, -1) // remove first and last bracket
-        .forEach(element => {
-            if (element === '[') {
-                bracketDepth++;
-            }
-            else if (element === ']') {
-                bracketDepth--;
-            }
-            else if (element === ',' && bracketDepth === 0) {
-                outArray.push(partialList);
-                partialList = '';
-                return;
-            }
-            partialList += element;
-        });
-    outArray.push(partialList); // push last partial
-    return outArray;
-};
+import './aoc.extensions';
 
 enum Comparison {
-    Less,
-    Equal,
-    Greater
+    Less = -1,
+    Equal = 0,
+    Greater = 1
 }
 
 class Item {
     readonly value?: Number;
     readonly children?: Item[];
+    readonly originalString: String;
 
     constructor(input: string) {
+        // Store Original
+        this.originalString = input
 
         // Simple Value
         const parseToValue = Number.parseInt(input);
@@ -45,43 +22,24 @@ class Item {
             return;
         }
 
+        if (input === '') {
+            this.value = -1;
+            return;
+        }
+
         // Array / List / Children
         this.children = [];
+        const topLevels = input.splitTopLevel('[]', ',');
+        this.children = topLevels.map(s => new Item(s));
+    }
 
-        if (input.charAt(0) !== '[') {
-            throw new Error('Invalid list: does not start with [');
-        }
-
-        let bracketDepth = 0;
-        let partial = '';
-
-        input.split('')
-            .slice(1) // remove first bracket
-            .forEach(element => {
-                if (element === '[') {
-                    bracketDepth++;
-                }
-                else if (element === ']') {
-                    bracketDepth--;
-                }
-                else if (element === ',' && bracketDepth === 0) {
-                    this.children.push(new Item(partial));
-                    partial = '';
-                    return;
-                }
-                partial += element;
-            });
-
-        // Push last partial
-        partial = partial.slice(0, -1); // remove last bracket
-        if (partial !== '') {
-            this.children.push(new Item(partial));
-        }
+    HasValue(): Boolean {
+        return !this.children;
     }
 
     Compare(other: Item): Comparison {
 
-        if (this.value && other.value) {
+        if (this.HasValue() && other.HasValue()) {
             if (this.value > other.value) {
                 return Comparison.Greater;
             }
@@ -96,14 +54,12 @@ class Item {
         let thisItem: Item = this;
         let otherItem: Item = other;
 
-        if (this.value) {
+        if (this.HasValue()) {
             thisItem = new Item(`[${this.value}]`);
         }
-        if (other.value) {
+        if (other.HasValue()) {
             otherItem = new Item(`[${other.value}]`);
         }
-
-        // So I think this is kinda stupid... Remove outside brackets, split(','), repeat
 
         let index = 0;
 
@@ -115,22 +71,25 @@ class Item {
             index++;
         }
 
-        if (!thisItem.children[index]) { return Comparison.Less; }
-        if (!otherItem.children[index]) { return Comparison.Greater; }
+        if (!thisItem.children[index] && otherItem.children[index]) {
+            return Comparison.Less;
+        }
+        if (thisItem.children[index] && !otherItem.children[index]) {
+            return Comparison.Greater;
+        }
 
         return Comparison.Equal;
-
-        throw new Error('should not get here');
     }
 }
 
-const solve = (input: string): Number => {
-
+const part1 = (input: string): Number => {
     const pairs = input
         .trim()
         .replaceAll('\r', '') // Sanitize input
-        .split('\n\n') // Split into lists of calories
+        .split('\n\n')
         .map(e => e.split('\n')) // Convert lists into arrays
+
+    let total = 0;
 
     pairs.forEach((pair, index) => {
         const item0 = new Item(pair[0]);
@@ -138,23 +97,43 @@ const solve = (input: string): Number => {
 
         const comparison = item0.Compare(item1);
         const isRightOrder = comparison === Comparison.Less;
-        console.log(isRightOrder);
+        if (isRightOrder) {
+            total += (index + 1);
+        }
     });
-    return 0;
 
-
+    return total;
 }
 
-const part1 = (input: string) => {
+const part2 = (input: string) => {
+    const lines = input
+        .trim()
+        .replaceAll('\r', '') // Sanitize input
+        .replaceAll('\n\n', '\n')
+        .split('\n')
+        .concat(['[[2]]', '[[6]]'])
+        .map(s => new Item(s));
 
+    const sorted = lines.sort((a, b) => {
+        return a.Compare(b);
+    });
 
-    const result = solve(input);
+    // TODO: There is a bug in the Compare code.
+    // The following aren't sorted properly:
+    // []
+    // [[]]
+    // [[[]]]
+    // We still get a correct answer though.        
 
-    //const test = splitter(input);
-    //const test2 = new Item(input);
-    //console.log('blah');
-    return result;
-} //solve(input)[0].calories;
-const part2 = (input: string) => { }// solve(input).reduce((prev, cur) => prev + cur.calories, 0);
+    const decode2 = sorted.findIndex(item => {
+        return item.originalString === '[[2]]';
+    });
+
+    const decode6 = sorted.findIndex(item => {
+        return item.originalString === '[[6]]';
+    });
+
+    return (decode2 + 1) * (decode6 + 1);
+}
 
 export { part1, part2 };
