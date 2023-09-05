@@ -1,11 +1,15 @@
-interface IGrid {
 
-}
 
 //type Coor2D = [x: number, y: number];
-type Coor2D = {
-    x: number,
-    y: number
+// type Coor2D = {
+//     x: number,
+//     y: number
+// }
+
+class Coor2D{
+    x: number;
+    y: number;
+    //constructor()
 }
 
 // type Rect = {
@@ -33,6 +37,12 @@ class Rect {
 
 //type Grid2D = Map<Coor2D, string>;
 
+type GridValue = {
+    value: string;
+    x: number;
+    y: number;
+}
+
 class Grid2D {
     grid: Object;
     bounds: Rect;
@@ -49,7 +59,7 @@ class Grid2D {
 
     static IndexesToKey = (coor: Coor2D): string => `X${coor.x}Y${coor.y}`;
 
-    get = (key: Coor2D) => {
+    get = (key: Coor2D): GridValue|null => {
         // Create a hash/key
         const hash = Grid2D.IndexesToKey(key);
         if (typeof (this.grid[hash]) === 'undefined') {
@@ -58,7 +68,7 @@ class Grid2D {
                 // Set it with the default value
                 this.set(key, this.defaultValue);
             } else {
-                return false;
+                return null;
             }
         }
         return this.grid[hash];
@@ -73,9 +83,9 @@ class Grid2D {
 
         const hash = Grid2D.IndexesToKey(key);
         this.grid[hash] = {
-            "value": value,
-            "x": key.x,
-            "y": key.y
+            value,
+            x: key.x,
+            y: key.y
         };
     }
 
