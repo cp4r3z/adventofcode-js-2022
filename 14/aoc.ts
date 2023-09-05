@@ -69,7 +69,6 @@ const parse = (input: String): Grid2D => {
 const fall = (grid: Grid2D, sand: Sand): Sand | null => {
     let fallenSand = new Sand(sand.x, sand.y);
     fallenSand.down();
-    const test = grid.get(fallenSand)
     if (grid.get(fallenSand).value === '.') return fallenSand;
 
     fallenSand = new Sand(sand.x, sand.y);
@@ -114,7 +113,40 @@ const part1 = (input: string): Number => {
 }
 
 const part2 = (input: string): Number => {
-    return 0;
+    // Honestly, we could probably save some time by continuing from Part 1
+
+    const grid = parse(input);
+    //grid.print(true);
+
+    // "Stack" of sand
+    // Records the path of sand as is falls
+    // This way, we don't have to calculate the entire path every time.
+    const sandStack = [new Sand(500, 0)];
+    let sandCount = 0;
+    const outOfBounds = grid.bounds.maxY;
+
+    while (sandStack.length) { // The stack length is 0 when we've retraced all the way to the top
+        const sand = sandStack[sandStack.length - 1];
+
+        const nextSand = fall(grid, sand);
+        if (!nextSand) {
+            grid.set(sand, 'o');
+            //grid.print(true);
+            sandStack.pop();
+            sandCount++;
+        }
+        else if (nextSand.y === outOfBounds + 1) {
+            grid.set(nextSand, 'o');
+            //grid.print(true);
+            sandStack.pop();
+            sandCount++;
+        }
+        else {
+            sandStack.push(nextSand);
+        }
+    }
+
+    return sandCount;
 }
 
 export { part1, part2 };
