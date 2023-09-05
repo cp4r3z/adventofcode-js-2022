@@ -138,6 +138,7 @@ function placeRockPaths(grid: Grid2D): void {
 
 const part1 = (input: string): Number => {
     const grid = parse(input);
+    grid.print(true);
 
     //const testGrid = new Grid({});
     // const testGrid2d = new Grid2D();

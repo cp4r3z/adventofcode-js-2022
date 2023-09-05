@@ -1,1 +1,7 @@
-export default { transform: {} };
+export default {
+    transform: {
+
+    },
+    //verbose: false,
+    setupFilesAfterEnv:["./jest.console.js"]
+};
