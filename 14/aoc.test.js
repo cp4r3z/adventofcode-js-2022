@@ -15,7 +15,6 @@ describe('Day 14', () => {
 
     it('Part 2', async () => {
         const solution = part2(tinput);
-        console.log(solution);
         expect(solution).toBe(93);
     });
 
