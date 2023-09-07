@@ -58,7 +58,7 @@ class Grid15 extends Grid2D {
 
         // Find the coverage intervals for each sensor,
         // but only at the row of interest
-        
+
         this.sensors.forEach(sensor => {
             const s = sensor;
             const b = sensor.beacon;
@@ -76,7 +76,7 @@ class Grid15 extends Grid2D {
         this.coverage.sort((a, b) => a.min - b.min);
 
         // Merge all overlapping intervals
-        
+
         const union = [this.coverage[0]];
 
         this.coverage.forEach(interval => {
@@ -102,11 +102,11 @@ class Grid15 extends Grid2D {
         })
 
         let covered = union.reduce((prev, cur) => prev + (cur.max - cur.min + 1), 0);
-        
+
         // subtract off beacon positions
         covered -= beaconsInCoverage;
 
-        return covered;        
+        return covered;
     }
 }
 
@@ -127,9 +127,24 @@ const part1 = (input: string, row: number): Number => {
     return solution;
 }
 
-const part2 = (input: string): Number => {
-    
-    return 0;
+const part2 = (input: string, row: number): Number => {
+
+    // Yeah, honestly this is sounding more and more like I should have used a quadtree :-(
+
+    const sensors = parse(input);
+    const grid = new Grid15(row);
+    grid.addSensors(sensors);
+    //grid.print(true); // Don't do this for the real input!
+    let solution = 0;
+    for (let index = 0; index < 4e6; index++) {
+        if (index%1e4===0){
+            console.log(index);
+        }
+        solution = grid.calculateCoverage();   
+    }
+    return solution;
+
+    //return 0;
 }
 
 export { part1, part2 };
