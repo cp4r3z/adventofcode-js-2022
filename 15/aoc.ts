@@ -18,19 +18,25 @@ import { Grid2D, Coor2D } from '../common/grid';
 //         this.x++;
 //     }
 // }
-const createSensorRange = (n) => {
+const createSensorRange = (n: number, row: number) => {
     const range = [];
+    if (row<1){
+        return range;
+    }
     for (let x = -n; x <= n; x++) {
+        //const y = row;
         for (let y = -n; y <= n; y++) {
-            if (Math.abs(x) + Math.abs(y) <= n) {
-                range.push({ x, y });
+            if (y === row) {
+                if (Math.abs(x) + Math.abs(y) <= n) {
+                    range.push({ x, y });
+                }
             }
         }
     }
     return range;
 }
 
-const parse = (input: String): Grid2D => {
+const parse = (input: String, row: number): Grid2D => {
 
     // Sensor at x=2, y=18: closest beacon is at x=-2, y=15    
 
@@ -51,7 +57,8 @@ const parse = (input: String): Grid2D => {
             };
 
             const distance = Math.abs(beaconSensor.x - coorSensor.x) + Math.abs(beaconSensor.y - coorSensor.y);
-            const range = createSensorRange(distance);
+            
+            const range = createSensorRange(distance, row- coorSensor.y);
 
             range.forEach(_xy => {
                 const xy = {
@@ -97,10 +104,9 @@ const countUnscanned = (grid: Grid2D, y) => {
 }
 
 const part1 = (input: string, row: number): Number => {
-    const range = createSensorRange(1);
-    const grid = parse(input);
+    const grid = parse(input, row);
     grid.print(true);
-    const solution = countUnscanned(grid,row);
+    const solution = countUnscanned(grid, row);
     return solution;
 }
 
