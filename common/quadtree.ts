@@ -17,7 +17,7 @@ type Bounds = { x0y0: Coor2D, x1y1: Coor2D };
 
 class QuadTree<T> {
 
-    node: Node<T> | null; // This is where data is stored
+    node: Node<T>; // This is where data is stored
     //coor: Coor2D; // Can this also be generic?
 
     /**
@@ -48,14 +48,17 @@ class QuadTree<T> {
     } | null;
 
     constructor(_bounds: Bounds) {
-        this.bounds.x0y0 = _bounds.x0y0;
-        this.bounds.x1y1 = _bounds.x1y1;
+        this.bounds = {
+            x0y0: _bounds.x0y0,
+            x1y1: _bounds.x1y1
+        };
         this.node = null;
-        this.quads = null;
-        // this.quads.x0y0 = null;
-        // this.quads.x0y1 = null;
-        // this.quads.x1y0 = null;
-        // this.quads.x1y1 = null;
+        this.quads = {
+            x0y0: null,
+            x0y1: null,
+            x1y0: null,
+            x1y1: null
+        }
     }
 }
 

@@ -1,4 +1,5 @@
 import { Grid2D, Coor2D } from '../common/grid';
+import { QuadTree } from '../common/quadtree';
 
 class Beacon extends Coor2D {
     //readonly sensor // not really necessary, but we could create a back-link to the sensor
@@ -131,20 +132,27 @@ const part2 = (input: string, row: number): Number => {
 
     // Yeah, honestly this is sounding more and more like I should have used a quadtree :-(
 
-    const sensors = parse(input);
-    const grid = new Grid15(row);
-    grid.addSensors(sensors);
-    //grid.print(true); // Don't do this for the real input!
-    let solution = 0;
-    for (let index = 0; index < 4e6; index++) {
-        if (index%1e4===0){
-            console.log(index);
-        }
-        solution = grid.calculateCoverage();   
-    }
-    return solution;
+    const Q = new QuadTree<Boolean>({
+        x0y0: { x: 0, y: 0 },
+        x1y1: { x: 4e6, y: 4e6 }
+    });
 
-    //return 0;
+    // It would seem that quadtree nodes are single points. We want "ranges"
+
+    // const sensors = parse(input);
+    // const grid = new Grid15(row);
+    // grid.addSensors(sensors);
+    // //grid.print(true); // Don't do this for the real input!
+    // let solution = 0;
+    // for (let index = 0; index < 4e6; index++) {
+    //     if (index%1e4===0){
+    //         console.log(index);
+    //     }
+    //     solution = grid.calculateCoverage();   
+    // }
+    // return solution;
+
+    return 0;
 }
 
 export { part1, part2 };
