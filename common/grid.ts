@@ -6,10 +6,14 @@
 //     y: number
 // }
 
-class Coor2D{
+class Coor2D {
     x: number;
     y: number;
-    //constructor()
+    
+    constructor(x?: number, y?: number) {
+        this.x = x ? x : 0;
+        this.y = y ? y : 0;
+    }
 }
 
 // type Rect = {
@@ -59,7 +63,7 @@ class Grid2D {
 
     static IndexesToKey = (coor: Coor2D): string => `X${coor.x}Y${coor.y}`;
 
-    get = (key: Coor2D): GridValue|null => {
+    get = (key: Coor2D): GridValue | null => {
         // Create a hash/key
         const hash = Grid2D.IndexesToKey(key);
         if (typeof (this.grid[hash]) === 'undefined') {

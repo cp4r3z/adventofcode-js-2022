@@ -1,119 +1,150 @@
 import { Grid2D, Coor2D } from '../common/grid';
 
-// class Sand extends Coor2D {
-//     constructor(x: number, y: number) {
-//         super();
-//         this.x = x;
-//         this.y = y;
-//     }
-//     down() {
-//         this.y++;
-//     }
-//     downLeft() {
-//         this.down();
-//         this.x--;
-//     }
-//     downRight() {
-//         this.down();
-//         this.x++;
-//     }
-// }
-const createSensorRange = (n: number, row: number) => {
-    const range = [];
-    if (row<1){
-        return range;
-    }
-    for (let x = -n; x <= n; x++) {
-        //const y = row;
-        for (let y = -n; y <= n; y++) {
-            if (y === row) {
-                if (Math.abs(x) + Math.abs(y) <= n) {
-                    range.push({ x, y });
-                }
-            }
-        }
-    }
-    return range;
+class Beacon extends Coor2D {
+    //readonly sensor // not really necessary, but we could create a back-link to the sensor
 }
 
-const parse = (input: String, row: number): Grid2D => {
+class Sensor extends Coor2D {
+    readonly beacon: Beacon;
 
-    // Sensor at x=2, y=18: closest beacon is at x=-2, y=15    
+    /**
+     * 
+     * @param s Line from Input
+     */
+    constructor(s: string) {
+        // Example
+        // Sensor at x=2, y=18: closest beacon is at x=-2, y=15
+        const matches = s.match(/([-\d]+)/g);
+        if (matches.length !== 4) throw new Error('Sensor needs 4 digits');
+        const digits = matches.map(s => parseInt(s));
+        super(digits[0], digits[1]);
+        this.beacon = new Beacon(digits[2], digits[3]);
+    }
+}
 
-    const grid = new Grid2D();
+class Grid15 extends Grid2D {
 
-    const splitToCoors = input
-        .split("\n")
-        .forEach(s => {
-            const matches = s.match(/([-\d]+)/g);
-            const coorSensor = {
-                x: parseInt(matches[0]),
-                y: parseInt(matches[1])
-            };
+    // The row of interest
+    readonly row: number;
+    sensors: Sensor[];
+    beacons: Beacon[];
+    coverage: { min: number, max: number }[];
 
-            const beaconSensor = {
-                x: parseInt(matches[2]),
-                y: parseInt(matches[3])
-            };
+    constructor(row: number) {
+        super();
+        this.row = row;
+        this.sensors = [];
+        this.beacons = [];
+        this.coverage = [];
+    }
 
-            const distance = Math.abs(beaconSensor.x - coorSensor.x) + Math.abs(beaconSensor.y - coorSensor.y);
-            
-            const range = createSensorRange(distance, row- coorSensor.y);
+    // Add the sensors to the grid    
+    addSensors(sensors: Sensor[]): void {
+        this.sensors = sensors;
+        this.sensors.forEach(sensor => {
+            this.set(sensor, 'S');
 
-            range.forEach(_xy => {
-                const xy = {
-                    x: _xy.x + coorSensor.x,
-                    y: _xy.y + coorSensor.y
-                }
-                const gridXY = grid.get(xy);
-                if (gridXY.value !== "B" && gridXY.value !== "S") {
-                    grid.set(xy, "#");
-                }
-            });
+            if (this.get(sensor.beacon).value !== 'B') {
+                // New beacon
+                this.set(sensor.beacon, 'B');
+                this.beacons.push(sensor.beacon);
+            }
+        });
+    }
 
-            grid.set(beaconSensor, "B");
-            grid.set(coorSensor, "S");
+    calculateCoverage(): number {
+        // TODO: Maybe this is a good excuse to learn how to make an interval tree!
+        // https://saturncloud.io/blog/interval-tree-algorithm-merging-overlapping-intervals/
+
+        // Find the coverage intervals for each sensor,
+        // but only at the row of interest
+
+        this.sensors.forEach(sensor => {
+            const s = sensor;
+            const b = sensor.beacon;
+            const distance = Math.abs(b.x - s.x) + Math.abs(b.y - s.y);
+
+            const distanceToRow = Math.abs(this.row - s.y);
+            if (distance < distanceToRow) return;
+
+            const rangeAtRow = distance - distanceToRow;
+            const min = s.x - rangeAtRow;
+            const max = s.x + rangeAtRow;
+            this.coverage.push({ min, max });
         });
 
-    return grid;
+        this.coverage.sort((a, b) => a.min - b.min);
+
+        // Merge all overlapping intervals
+
+        const union = [this.coverage[0]];
+
+        this.coverage.forEach(interval => {
+            const last = union[union.length - 1];
+            if (interval.min <= last.max) {
+                last.max = Math.max(interval.max, last.max);
+            } else {
+                union.push(interval);
+            }
+        });
+
+        // Figure out how many beacons are in the coverage intervals (and don't count them)
+
+        let beaconsInCoverage = 0;
+
+        this.beacons.forEach(beacon => {
+            if (beacon.y !== this.row) return;
+            union.forEach(interval => {
+                if (beacon.x >= interval.min && beacon.x <= interval.max) {
+                    beaconsInCoverage++;
+                }
+            })
+        })
+
+        let covered = union.reduce((prev, cur) => prev + (cur.max - cur.min + 1), 0);
+
+        // subtract off beacon positions
+        covered -= beaconsInCoverage;
+
+        return covered;
+    }
 }
 
-// const fall = (grid: Grid2D, sand: Sand): Sand | null => {
-//     let fallenSand = new Sand(sand.x, sand.y);
-//     fallenSand.down();
-//     if (grid.get(fallenSand).value === '.') return fallenSand;
 
-//     fallenSand = new Sand(sand.x, sand.y);
-//     fallenSand.downLeft();
-//     if (grid.get(fallenSand).value === '.') return fallenSand;
-
-//     fallenSand = new Sand(sand.x, sand.y);
-//     fallenSand.downRight();
-//     if (grid.get(fallenSand).value === '.') return fallenSand;
-
-//     return null;
-// };
-
-const countUnscanned = (grid: Grid2D, y) => {
-    let count = 0;
-    for (let x = grid.bounds.minX; x <= grid.bounds.maxX; x++) {
-        const value = grid.get({ x, y }).value;
-        if (value === '#') count++;
-    }
-    return count;
+const parse = (input: String): Sensor[] => {
+    const sensors = input
+        .split("\n")
+        .map(s => new Sensor(s));
+    return sensors;
 }
 
 const part1 = (input: string, row: number): Number => {
-    const grid = parse(input, row);
-    grid.print(true);
-    const solution = countUnscanned(grid, row);
+    const sensors = parse(input);
+    const grid = new Grid15(row);
+    grid.addSensors(sensors);
+    //grid.print(true); // Don't do this for the real input!
+    const solution = grid.calculateCoverage();
     return solution;
 }
 
-const part2 = (input: string): Number => {
-    // Honestly, we could probably save some time by continuing from Part 1
+const part2 = (input: string, row: number): Number => {
 
-    return 0;
+    // Yeah, honestly this is sounding more and more like I should have used a quadtree :-(
+
+    const sensors = parse(input);
+    const grid = new Grid15(row);
+    grid.addSensors(sensors);
+    //grid.print(true); // Don't do this for the real input!
+    let solution = 0;
+    for (let index = 0; index < 4e6; index++) {
+        if (index%1e4===0){
+            console.log(index);
+        }
+        solution = grid.calculateCoverage();   
+    }
+    return solution;
+
+    //return 0;
 }
 
 export { part1, part2 };

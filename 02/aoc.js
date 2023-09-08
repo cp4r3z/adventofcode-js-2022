@@ -52,8 +52,7 @@ const solve = input => {
         total += score;
         total2 += score2;
     }
-    //console.log(total);
-
+    
     return {
         part1: total,
         part2: total2

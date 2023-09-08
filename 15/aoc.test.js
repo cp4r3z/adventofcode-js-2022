@@ -14,9 +14,8 @@ describe('Day 14', () => {
     });
 
     xit('Part 2', async () => {
-        const solution = part2(tinput);
-        console.log(solution);
-        expect(solution).toBe(93);
+        const solution = part2(tinput);        
+        expect(solution).toBe(56000011);
     });
 
     xit('Part 2 (Real Input)', async () => {
