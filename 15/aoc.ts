@@ -1,5 +1,5 @@
 import { Grid2D, Coor2D } from '../common/grid';
-import { QuadTree } from '../common/quadtree';
+import { QuadTree, Bounds } from '../common/quadtree';
 
 class Beacon extends Coor2D {
     //readonly sensor // not really necessary, but we could create a back-link to the sensor
@@ -132,10 +132,12 @@ const part2 = (input: string, row: number): Number => {
 
     // Yeah, honestly this is sounding more and more like I should have used a quadtree :-(
 
-    const Q = new QuadTree<Boolean>({
-        x0y0: { x: 0, y: 0 },
-        x1y1: { x: 4e6, y: 4e6 }
-    });
+    const bounds = new Bounds(new Coor2D(0, 0), new Coor2D(4, 4));
+    //const bounds = new Bounds(new Coor2D(0, 0), new Coor2D(4e6, 4e6));
+
+    const Q = new QuadTree<Boolean>(bounds);
+
+    Q.Set(new Bounds(new Coor2D(0, 0), new Coor2D(1, 3)), true);
 
     // It would seem that quadtree nodes are single points. We want "ranges"
 

@@ -1,19 +1,21 @@
 
 
-//type Coor2D = [x: number, y: number];
-// type Coor2D = {
-//     x: number,
-//     y: number
-// }
+interface ICoor2D { x: number, y: number };
 
-class Coor2D {
+class Coor2D implements ICoor2D {
+    static Copy = (source: ICoor2D): ICoor2D => new Coor2D(source.x, source.y);
+
     x: number;
     y: number;
-    
+
     constructor(x?: number, y?: number) {
         this.x = x ? x : 0;
         this.y = y ? y : 0;
     }
+
+    //copy = () => new Coor2D(this.x, this.y); // Consider making this static?    
+
+    
 }
 
 // type Rect = {
@@ -61,9 +63,9 @@ class Grid2D {
         this.defaultValue = "."
     }
 
-    static IndexesToKey = (coor: Coor2D): string => `X${coor.x}Y${coor.y}`;
+    static IndexesToKey = (coor: ICoor2D): string => `X${coor.x}Y${coor.y}`;
 
-    get = (key: Coor2D): GridValue | null => {
+    get = (key: ICoor2D): GridValue | null => {
         // Create a hash/key
         const hash = Grid2D.IndexesToKey(key);
         if (typeof (this.grid[hash]) === 'undefined') {
@@ -78,7 +80,7 @@ class Grid2D {
         return this.grid[hash];
     }
 
-    set = (key: Coor2D, value: string): void => {
+    set = (key: ICoor2D, value: string): void => {
         // Keep record of the overall dimensions
         if (this.bounds.minX === null || key.x < this.bounds.minX) this.bounds.minX = key.x;
         if (this.bounds.maxX === null || key.x > this.bounds.maxX) this.bounds.maxX = key.x;

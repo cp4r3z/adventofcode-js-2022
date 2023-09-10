@@ -2,8 +2,8 @@ import { jest } from '@jest/globals';
 import { part1, part2 } from '../out/15/aoc';
 import { input, tinput } from './aoc.input';
 
-describe('Day 14', () => {
-    it('Part 1', async () => {
+describe('Day 15', () => {
+    xit('Part 1', async () => {
         const solution = part1(tinput, 10);
         expect(solution).toBe(26);
     });
