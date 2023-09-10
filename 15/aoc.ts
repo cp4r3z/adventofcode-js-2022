@@ -170,6 +170,9 @@ const part2 = (input: string, row: number): Number => {
 
     Q.Set(new Bounds(new Coor2D(0, 0), new Coor2D(0, 3)), true);
 
+    const test1 = Q.Get(new Coor2D(0,1));
+    const test2 = Q.Get(new Coor2D(1,1));
+
 
     //const bounds2 = new Bounds(new Coor2D(0, 0), new Coor2D(4e6, 4e6)); // Not a power of 2
     const bounds2 = new Bounds(

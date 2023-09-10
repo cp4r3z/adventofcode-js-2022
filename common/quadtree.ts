@@ -277,7 +277,7 @@ class QuadTree<T> {
             console.error('Unable to find coor');
         }
 
-        return this.data;
+        return containingQuad.Get(coor);
     }
 
 }
