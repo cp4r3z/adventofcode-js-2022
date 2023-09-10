@@ -119,5 +119,4 @@ class Grid2D {
 
 }
 
-
 export { Grid2D, Coor2D };

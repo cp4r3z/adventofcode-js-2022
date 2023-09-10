@@ -1,5 +1,5 @@
 import { Grid2D, Coor2D } from '../common/grid';
-import { QuadTree, Bounds } from '../common/quadtree';
+import { QuadTree, Bounds, QuadTreeExpanding } from '../common/quadtree';
 
 class Beacon extends Coor2D {
     //readonly sensor // not really necessary, but we could create a back-link to the sensor
@@ -128,16 +128,68 @@ const part1 = (input: string, row: number): Number => {
     return solution;
 }
 
+/**
+ * More than meets the eye
+ */
+class Transformer {
+
+    /**
+     * @returns uv
+     */
+    static XY2UV = (xy: Coor2D): Coor2D => {
+        const u = xy.x + xy.y;
+        const v = xy.y - xy.x;
+        return new Coor2D(u, v);
+    }
+
+    /**
+     * @returns xy
+     */
+    static UV2XY = (uv: Coor2D): Coor2D => {
+        const u = uv.x;
+        const v = uv.y;
+        const y = (u + v) / 2; // This should ALWAYS be an int. Check?
+        const x = u - y;
+        return new Coor2D(x, y);
+    }
+}
+
+
 const part2 = (input: string, row: number): Number => {
 
     // Yeah, honestly this is sounding more and more like I should have used a quadtree :-(
 
     const bounds = new Bounds(new Coor2D(0, 0), new Coor2D(4, 4));
-    //const bounds = new Bounds(new Coor2D(0, 0), new Coor2D(4e6, 4e6));
+
+    // Figure out how big the quadtree needs to be (how many levels deep)
+    //const pow = Math.ceil(Math.log2(4e6));
+
+    //const bounds = new Bounds(new Coor2D(0, 0), new Coor2D(Math.pow(2, pow), Math.pow(2, pow)));
 
     const Q = new QuadTree<Boolean>(bounds);
 
-    Q.Set(new Bounds(new Coor2D(0, 0), new Coor2D(1, 3)), true);
+    Q.Set(new Bounds(new Coor2D(0, 0), new Coor2D(0, 3)), true);
+
+
+    //const bounds2 = new Bounds(new Coor2D(0, 0), new Coor2D(4e6, 4e6)); // Not a power of 2
+    const bounds2 = new Bounds(
+        Transformer.XY2UV(new Coor2D(-2, -2)),
+        Transformer.XY2UV(new Coor2D(25, 22))
+    ); // Not a power of 2
+
+    const Q2 = new QuadTreeExpanding<Boolean>(bounds2);
+
+    // Feed in top and bottom of the sensor (in x,y)
+    // top (8, -2), bottom (8, -16)
+
+    const top = new Coor2D(8, -2);
+    const bot = new Coor2D(8, -16);
+    const sensor = new Bounds(Transformer.XY2UV(top), Transformer.XY2UV(bot));
+
+    Q2.Set(sensor, true); // we need a get
+
+    const G2 = new Grid2D();
+
 
     // It would seem that quadtree nodes are single points. We want "ranges"
 

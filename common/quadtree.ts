@@ -42,25 +42,19 @@ class Bounds {
         return new Bounds(x0y0, x1y1);
     }
 
-    // shift = (delta: Coor2D):void => {
-
-    //         new Coor2D( ),
-    //         new Coor2D() );
-    // }
-
     //TODO: Unit test this guy
     intersects = (other: Bounds): boolean => {
         const rangeX = [[this.x0y0.x, this.x1y1.x], [other.x0y0.x, other.x1y1.x]];
         const rangeY = [[this.x0y0.y, this.x1y1.y], [other.x0y0.y, other.x1y1.y]];
-        
+
         // TODO: Too confusing?
         return [rangeX, rangeY].reduce((prev, cur) => {
             if (!prev) return false;
             // Sort each range pair based on the lowest value (x0y0)
             const sorted = cur.sort((a, b) => a[0] - b[0]);
             // If the lowest value of the "high" is less than the highest value of the "low", it intersects
-            // Touching doesn't count
-            const result = sorted[1][0] < sorted[0][1];
+            // "On edge" counts
+            const result = sorted[1][0] <= sorted[0][1];
             return result;
         }, true);
     }
@@ -81,7 +75,31 @@ class Bounds {
         }, true);
     }
 
+    // Approximate center (rounded to next integer)
+    center = (): Coor2D => {
+        const dimX = this.x1y1.x - this.x0y0.x;
+        const dimY = this.x1y1.y - this.x0y0.y;
+        const center = new Coor2D(Math.ceil(dimX / 2), Math.ceil(dimY / 2));
+        return center;
+    }
+
+    hasCoor2D = (coor: Coor2D): Boolean => {
+        return (
+            coor.x >= this.x0y0.x && coor.x <= this.x1y1.x &&
+            coor.y >= this.x0y0.y && coor.y <= this.x1y1.y
+        );
+    }
+
+    isCoor2D = (coor: Coor2D): Boolean => {
+        return (
+            coor.x === this.x0y0.x && coor.x === this.x1y1.x &&
+            coor.y === this.x0y0.y && coor.y === this.x1y1.y
+        );
+    }
+
 };
+
+// Consider also a data structure that holds a quadtree, but can resize the root!
 
 class QuadTree<T> {
 
@@ -121,14 +139,14 @@ class QuadTree<T> {
     } | null;
 
     constructor(bounds: Bounds) {
-        
+
         // Find a power of 2 higher than the bounds?
         const dim = bounds.x1y1.x - bounds.x0y0.x;
-        
-        
+
+
         this.bounds = bounds.copy();
-        const dx = Math.abs(this.bounds.x1y1.x - this.bounds.x0y0.x);
-        const dy = Math.abs(this.bounds.x1y1.y - this.bounds.x0y0.y);
+        const dx = Math.abs(this.bounds.x1y1.x - this.bounds.x0y0.x) + 1;
+        const dy = Math.abs(this.bounds.x1y1.y - this.bounds.x0y0.y) + 1;
         this.area = dx * dy;
 
         //this.node = null;
@@ -146,20 +164,31 @@ class QuadTree<T> {
 
     split = (): Boolean => {
         // Note: This assumes a square quad!
-        const currentBoundDimension = this.bounds.x1y1.x - this.bounds.x0y0.x ;
+        const currentBoundDimension = this.bounds.x1y1.x - this.bounds.x0y0.x;
 
-        if (currentBoundDimension === 1) {
+        if (currentBoundDimension < 1) {
             // Cannot split!
             return false;
         }
 
-        const splitDim = currentBoundDimension / 2 
+        // if (currentBoundDimension === 1) {
+
+        //     return true;
+        // }
+
+        const splitDim = Math.floor(currentBoundDimension / 2);
+
+        let shift = splitDim;
+        if (splitDim === 0) {
+            shift = 1;
+            console.log('chek it')
+        }
 
         const shifts = {
             x0y0: new Coor2D(0, 0),
-            x0y1: new Coor2D(0, splitDim),
-            x1y0: new Coor2D(splitDim, 0),
-            x1y1: new Coor2D(splitDim, splitDim)
+            x0y1: new Coor2D(0, shift),
+            x1y0: new Coor2D(shift, 0),
+            x1y1: new Coor2D(shift, shift)
         }
 
         const splitBounds = {
@@ -186,22 +215,6 @@ class QuadTree<T> {
 
         return true;
     }
-
-    //public get area() { return this._area; }
-
-    // Intersects = (bounds: Bounds): boolean => {
-    //     // sort
-
-    //     // does 
-
-
-
-    //     const yCheck: boolean = bounds.x1y1.y <= this.bounds.x1y1.y && bounds.x0y0.y >= this.bounds.x0y0.y;
-    //     if (!yCheck) return false;
-    //     const xCheck: boolean = bounds.x1y1.x <= this.bounds.x1y1.x && bounds.x0y0.x >= this.bounds.x0y0.x;
-    //     if (!xCheck) return false;
-    //     return true;
-    // }
 
     // "Inserts" data into the bounded area
     Set = (bounds: Bounds, data: T) => {
@@ -243,6 +256,66 @@ class QuadTree<T> {
         }
     }
 
+    Get = (coor: Coor2D): T => {
+        // recurse through quads to find the data point.
+
+        // If we're here, return the data
+        if (this.bounds.isCoor2D(coor)) {
+            return this.data;
+        }
+
+        // Find quad
+        let containingQuad: QuadTree<T> = null;
+        for (const [key, quad] of Object.entries(this.quads)) {
+            //console.log(`${key}: ${value}`);
+            if (quad.bounds.hasCoor2D(coor)) {
+                containingQuad = quad;
+            }
+        }
+
+        if (!containingQuad) {
+            console.error('Unable to find coor');
+        }
+
+        return this.data;
+    }
+
 }
 
-export { QuadTree, Bounds };
+class QuadTreeExpanding<T>{
+    static BUFFER = 1.0; // TODO: This shouldn't be necessary once expansion works
+    root: QuadTree<T>;
+
+    constructor(bounds: Bounds) {
+        // Find a power of 2 higher than the bounds?        
+
+        const dimX = bounds.x1y1.x - bounds.x0y0.x;
+        const dimY = bounds.x1y1.y - bounds.x0y0.y;
+        let maxDim = Math.max(dimX, dimY);
+        maxDim *= QuadTreeExpanding.BUFFER;
+
+        // Figure out how big the quadtree needs to be (how many levels deep)
+        const pow = Math.ceil(Math.log2(maxDim));
+        const base2Dimension = Math.pow(2, pow);
+        const halfBase = base2Dimension / 2;
+
+        // Find max offset from 0,0?
+
+        // Maybe make the center of the quadtree the center of the bounds?
+
+        const center: Coor2D = bounds.center();
+
+        const x0y0 = new Coor2D(center.x - halfBase, center.y - halfBase);
+        const x1y1 = new Coor2D(center.x + halfBase, center.y + halfBase);
+
+        const base2Bounds = new Bounds(x0y0, x1y1);
+
+        this.root = new QuadTree<T>(base2Bounds);
+    }
+
+    // TODO: Make it expand!
+    Set = (bounds: Bounds, data: T) => this.root.Set(bounds, data);
+}
+
+export { QuadTree, Bounds, QuadTreeExpanding };
+
