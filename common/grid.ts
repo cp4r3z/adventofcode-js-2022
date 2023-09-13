@@ -15,7 +15,7 @@ class Coor2D implements ICoor2D {
 
     //copy = () => new Coor2D(this.x, this.y); // Consider making this static?    
 
-    
+
 }
 
 // type Rect = {
