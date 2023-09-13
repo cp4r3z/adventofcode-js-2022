@@ -178,7 +178,7 @@ class QuadTree<T> {
 
         const splitDim = Math.floor(currentBoundDimension / 2);
 
-        let shift = splitDim;
+        let shift = splitDim+1;
         if (splitDim === 0) {
             shift = 1;
             console.log('chek it')
@@ -223,6 +223,7 @@ class QuadTree<T> {
 
         if (bounds.contains(this.bounds)) {
             this.data = data;
+            console.log('set!')
 
             // No need to have children anymore
             this.quads = {
@@ -282,31 +283,42 @@ class QuadTree<T> {
 
 }
 
+// WIP!
 class QuadTreeExpanding<T>{
-    static BUFFER = 1.0; // TODO: This shouldn't be necessary once expansion works
+    static BUFFER = .1; // TODO: This shouldn't be necessary once expansion works
     root: QuadTree<T>;
 
     constructor(bounds: Bounds) {
-        // Find a power of 2 higher than the bounds?        
-
-        const dimX = bounds.x1y1.x - bounds.x0y0.x;
-        const dimY = bounds.x1y1.y - bounds.x0y0.y;
-        let maxDim = Math.max(dimX, dimY);
-        maxDim *= QuadTreeExpanding.BUFFER;
-
-        // Figure out how big the quadtree needs to be (how many levels deep)
-        const pow = Math.ceil(Math.log2(maxDim));
-        const base2Dimension = Math.pow(2, pow);
-        const halfBase = base2Dimension / 2;
 
         // Find max offset from 0,0?
 
         // Maybe make the center of the quadtree the center of the bounds?
 
-        const center: Coor2D = bounds.center();
+        // Actually, just storing an offset at the root would probably be smarter, although harder to debug
 
-        const x0y0 = new Coor2D(center.x - halfBase, center.y - halfBase);
-        const x1y1 = new Coor2D(center.x + halfBase, center.y + halfBase);
+        //const center: Coor2D = bounds.center();
+
+
+        const dimX = bounds.x1y1.x - bounds.x0y0.x;
+        const dimY = bounds.x1y1.y - bounds.x0y0.y;
+        const maxDim = Math.max(dimX, dimY);
+
+        const offset = Math.ceil(maxDim * QuadTreeExpanding.BUFFER);
+
+        const quadDim = maxDim + 2 * offset;
+
+        // Find a power of 2 higher than the bounds?        
+        // Figure out how big the quadtree needs to be (how many levels deep)
+
+        const pow = Math.ceil(Math.log2(quadDim));
+        const base2Dimension = Math.pow(2, pow) - 1;
+        //const halfBase = base2Dimension / 2;        
+
+        // const x0y0 = new Coor2D(center.x - halfBase, center.y - halfBase);
+        // const x1y1 = new Coor2D(center.x + halfBase, center.y + halfBase);       
+
+        const x0y0 = new Coor2D(bounds.x0y0.x - offset, bounds.x0y0.y - offset);
+        const x1y1 = new Coor2D(x0y0.x + base2Dimension, x0y0.y + base2Dimension);
 
         const base2Bounds = new Bounds(x0y0, x1y1);
 
@@ -314,7 +326,15 @@ class QuadTreeExpanding<T>{
     }
 
     // TODO: Make it expand!
-    Set = (bounds: Bounds, data: T) => this.root.Set(bounds, data);
+    Set = (bounds: Bounds, data: T) => {
+
+        // while (!this.root.bounds.contains(bounds)) {
+
+        // }
+
+
+        this.root.Set(bounds, data);
+    }
 }
 
 export { QuadTree, Bounds, QuadTreeExpanding };
