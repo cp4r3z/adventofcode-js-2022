@@ -1,11 +1,14 @@
 import { Grid2D, Coor2D } from '../common/grid';
-import { QuadTree, Bounds, QuadTreeExpanding } from '../common/quadtree';
+import * as Point from '../common/base/points';
+import * as Shape from '../common/base/shapes';
 
-class Beacon extends Coor2D {
+import { QuadTree, Base2Rect, QuadTreeExpanding } from '../common/quadtree';
+
+class Beacon extends Point.XY {
     //readonly sensor // not really necessary, but we could create a back-link to the sensor
 }
 
-class Sensor extends Coor2D {
+class Sensor extends Point.XY {
     readonly beacon: Beacon;
 
     /**
@@ -136,21 +139,21 @@ class Transformer {
     /**
      * @returns uv
      */
-    static XY2UV = (xy: Coor2D): Coor2D => {
+    static XY2UV = (xy: Point.XY): Point.XY => {
         const u = xy.x + xy.y;
         const v = xy.y - xy.x;
-        return new Coor2D(u, v);
+        return new Point.XY(u, v);
     }
 
     /**
      * @returns xy
      */
-    static UV2XY = (uv: Coor2D): Coor2D => {
+    static UV2XY = (uv: Point.XY): Point.XY => {
         const u = uv.x;
         const v = uv.y;
         const y = (u + v) / 2; // This should ALWAYS be an int. Check?
         const x = u - y;
-        return new Coor2D(x, y);
+        return new Point.XY(x, y);
     }
 }
 
@@ -159,30 +162,30 @@ const part2 = (input: string, row: number): Number => {
 
     // Yeah, honestly this is sounding more and more like I should have used a quadtree :-(
 
-    //const bounds = new Bounds(new Coor2D(0, 0), new Coor2D(4, 4));
+    //const bounds = new Bounds(new Point.XY(0, 0), new Point.XY(4, 4));
 
     // Figure out how big the quadtree needs to be (how many levels deep)
     
     // const pow = Math.ceil(Math.log2(4e6));
 
-    // const bounds = new Bounds(new Coor2D(0, 0), new Coor2D(Math.pow(2, pow) -1, Math.pow(2, pow) -1));
+    // const bounds = new Bounds(new Point.XY(0, 0), new Point.XY(Math.pow(2, pow) -1, Math.pow(2, pow) -1));
 
     // const Q = new QuadTree<Boolean>(bounds);
 
-    // Q.Set(new Bounds(new Coor2D(0, 0), new Coor2D(0, 3)), true);
+    // Q.Set(new Bounds(new Point.XY(0, 0), new Point.XY(0, 3)), true);
 
-    // const test1 = Q.Get(new Coor2D(0,1));
-    // const test2 = Q.Get(new Coor2D(1,1));
+    // const test1 = Q.Get(new Point.XY(0,1));
+    // const test2 = Q.Get(new Point.XY(1,1));
 
-    const bounds1 = new Bounds(new Coor2D(0, 0), new Coor2D(3, 3));
+    const bounds1 = new Base2Rect(new Point.XY(0, 0), new Point.XY(3, 3));
     const Q1 = new QuadTreeExpanding<Boolean>(bounds1);
-    Q1.Set(new Bounds(new Coor2D(0, 0), new Coor2D(0, 2)), true); // should be 3 places
+    Q1.Set(new Base2Rect(new Point.XY(0, 0), new Point.XY(0, 2)), true); // should be 3 places
 
 
-    //const bounds2 = new Bounds(new Coor2D(0, 0), new Coor2D(4e6, 4e6)); // Not a power of 2
-    const bounds2 = new Bounds(
-        Transformer.XY2UV(new Coor2D(-2, -2)),
-        Transformer.XY2UV(new Coor2D(25, 22))
+    //const bounds2 = new Bounds(new Point.XY(0, 0), new Point.XY(4e6, 4e6)); // Not a power of 2
+    const bounds2 = new Base2Rect(
+        Transformer.XY2UV(new Point.XY(-2, -2)),
+        Transformer.XY2UV(new Point.XY(25, 22))
     ); // Not a power of 2
 
     const Q2 = new QuadTreeExpanding<Boolean>(bounds2);
@@ -190,9 +193,9 @@ const part2 = (input: string, row: number): Number => {
     // Feed in top and bottom of the sensor (in x,y)
     // top (8, -2), bottom (8, -16)
 
-    const top = new Coor2D(8, -2);
-    const bot = new Coor2D(8, 16);
-    const sensor = new Bounds(Transformer.XY2UV(top), Transformer.XY2UV(bot));
+    const top = new Point.XY(8, -2);
+    const bot = new Point.XY(8, 16);
+    const sensor = new Base2Rect(Transformer.XY2UV(top), Transformer.XY2UV(bot));
 
     Q2.Set(sensor, true); // we need a get
 

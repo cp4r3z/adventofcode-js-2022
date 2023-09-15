@@ -1,19 +1,21 @@
-interface IPointFunctions { copy:Function};
-interface IPoint1D { x: number };
-interface IPoint2D { x: number, y: number };
-interface IPoint3D { x: number, y: number, z: number };
+interface IPointFunctions { copy: Function, move: Function };
+export interface IPoint1D extends IPointFunctions { x: number };
+export interface IPoint2D extends IPointFunctions { x: number, y: number };
+export interface IPoint3D extends IPointFunctions { x: number, y: number, z: number };
 
-export class Point1D implements IPoint1D, IPointFunctions {
+export class X implements IPoint1D {
     x: number;
-    
+
     constructor(x?: number) {
-        this.x = x ? x : 0;        
+        this.x = x ? x : 0;
     }
 
-    public copy = () => new Point1D(this.x);
+    copy = () => new X(this.x);
+    move = (delta: X) => { this.x += delta.x; }
+
 }
 
-export class Point2D implements IPoint2D, IPointFunctions {
+export class XY implements IPoint2D {
     x: number;
     y: number;
 
@@ -22,7 +24,15 @@ export class Point2D implements IPoint2D, IPointFunctions {
         this.y = y ? y : 0;
     }
 
-    copy = () => new Point2D(this.x, this.y);
+    copy = () => new XY(this.x, this.y);
+
+    /**
+     * AKA "Add"
+     */
+    move = (delta: XY) => {
+        this.x += delta.x;
+        this.y += delta.y;
+    }
 }
 
 class Point2DMap extends Map {

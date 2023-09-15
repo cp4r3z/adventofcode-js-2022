@@ -1,4 +1,5 @@
-import { Point2D } from "./points";
+//import { Point.XY } from "./points";
+import * as Point from "./points"
 
 /**
  * Cannot Resize
@@ -14,47 +15,76 @@ export class Rectangle {
         );
     }
 
-    readonly x0y0: Point2D;
-    readonly x1y1: Point2D;
+    private _x0y0: Point.XY;
+    private _x1y1: Point.XY;
 
-    readonly minX: number;
-    readonly maxX: number;
-    readonly minY: number;
-    readonly maxY: number;
-
-    constructor(x0y0: Point2D, x1y1: Point2D) {
-        // Sanitize
+    constructor(x0y0: Point.IPoint2D, x1y1: Point.IPoint2D) {
         if (x0y0.x > x1y1.x || x0y0.y > x1y1.y) {
-            throw new Error("Invalid Rectangle");
+            // Try to reverse it
+            if (x0y0.x >= x1y1.x && x0y0.y >= x1y1.y) {
+                console.warn('Rectangle received reversed inputs');
+                this._x0y0 = x1y1.copy();
+                this._x1y1 = x0y0.copy();
+            } else {
+                throw new Error("Invalid Rectangle");
+            }
+        } else {
+            this._x0y0 = x0y0.copy();
+            this._x1y1 = x1y1.copy();
         }
+    }
 
-        this.x0y0 = x0y0.copy();
-        this.x1y1 = x1y1.copy();
-        this.minX = x0y0.x;
-        this.maxX = x1y1.x;
-        this.minY = x0y0.y;
-        this.maxY = x1y1.y;
+    public get x0y0() { return this._x0y0; }
+    public get x0y1() { return new Point.XY(this._x0y0.x, this._x1y1.y); }
+    public get x1y0() { return new Point.XY(this._x1y1.x, this._x0y0.y); }
+    public get x1y1() { return this._x1y1; }
+
+    public upperLeft(yUp?: boolean) { return yUp ? this.x0y1 : this.x0y0; }
+    public lowerLeft(yUp?: boolean) { return yUp ? this.x0y0 : this.x1y0; }
+    public upperRight(yUp?: boolean) { return yUp ? this.x1y1 : this.x0y1; }
+    public lowerRight(yUp?: boolean) { return yUp ? this.x1y0 : this.x1y1; }
+
+    public get minX(): number { return this._x0y0.x; }
+    public get maxX(): number { return this._x1y1.x; }
+    public get minY(): number { return this._x0y0.y; }
+    public get maxY(): number { return this._x1y1.y; }
+
+    public get deltaX(): number { return this.maxX - this.minX; }
+    public get deltaY(): number { return this.maxY - this.minY; }
+
+    /**
+     * @param delta move while copying
+     */
+    copy = (delta?: Point.XY) => {
+        const copy = new Rectangle(this._x0y0, this._x1y1);
+        if (delta) {
+            copy.move(delta);
+        }
+        return copy;
     }
 
     /**
-     * @param delta Shift while copying
+     * AKA "Add"
      */
-    copy = (delta?: Point2D) => {
-        let x0y0 = this.x0y0.copy();
-        let x1y1 = this.x1y1.copy();
-        if (delta) {
-            x0y0.x += delta.x;
-            x1y1.x += delta.x;
-            x0y0.y += delta.y;
-            x1y1.y += delta.y;
+    move = (delta: Point.XY) => {
+        this._x0y0.move(delta);
+        this._x1y1.move(delta);
+    }
+
+    area = (asGrid: boolean): number => {
+        let dx = this.deltaX;
+        let dy = this.deltaY;
+        if (asGrid) {
+            dx = this.deltaX + 1;
+            dy = this.deltaY + 1;
         }
-        return new Rectangle(x0y0, x1y1);
+        return dx * dy;
     }
 
     //TODO: Unit test this guy
     intersects = (other: Rectangle): boolean => {
-        const rangeX = [[this.x0y0.x, this.x1y1.x], [other.x0y0.x, other.x1y1.x]];
-        const rangeY = [[this.x0y0.y, this.x1y1.y], [other.x0y0.y, other.x1y1.y]];
+        const rangeX = [[this._x0y0.x, this._x1y1.x], [other.x0y0.x, other.x1y1.x]];
+        const rangeY = [[this._x0y0.y, this._x1y1.y], [other.x0y0.y, other.x1y1.y]];
 
         // TODO: Too confusing?
         return [rangeX, rangeY].reduce((prev, cur) => {
@@ -70,8 +100,8 @@ export class Rectangle {
 
     //TODO: Unit test this guy
     contains = (other: Rectangle): boolean => {
-        const rangeX = [[this.x0y0.x, this.x1y1.x], [other.x0y0.x, other.x1y1.x]];
-        const rangeY = [[this.x0y0.y, this.x1y1.y], [other.x0y0.y, other.x1y1.y]];
+        const rangeX = [[this._x0y0.x, this._x1y1.x], [other.x0y0.x, other.x1y1.x]];
+        const rangeY = [[this._x0y0.y, this._x1y1.y], [other.x0y0.y, other.x1y1.y]];
 
         // TODO: Too confusing
         return [rangeX, rangeY].reduce((prev, cur) => {
@@ -85,17 +115,25 @@ export class Rectangle {
     }
 
     // Approximate center (rounded to next integer)
-    center = (): Point2D => {
-        const dimX = this.x1y1.x - this.x0y0.x;
-        const dimY = this.x1y1.y - this.x0y0.y;
-        const center = new Point2D(Math.ceil(dimX / 2), Math.ceil(dimY / 2));
+    center = (): Point.XY => {
+        const dimX = this._x1y1.x - this._x0y0.x;
+        const dimY = this._x1y1.y - this._x0y0.y;
+        const center = new Point.XY(Math.ceil(dimX / 2), Math.ceil(dimY / 2));
         return center;
     }
 
-    hasPoint2D = (coor: Point2D): Boolean => {
+    // How is this different from contains?
+    hasPoint = (coor: Point.XY): Boolean => {
         return (
-            coor.x >= this.x0y0.x && coor.x <= this.x1y1.x &&
-            coor.y >= this.x0y0.y && coor.y <= this.x1y1.y
+            coor.x >= this._x0y0.x && coor.x <= this._x1y1.x &&
+            coor.y >= this._x0y0.y && coor.y <= this._x1y1.y
+        );
+    }
+
+    isPoint = (coor: Point.XY): Boolean => {
+        return (
+            coor.x === this._x0y0.x && coor.x === this._x1y1.x &&
+            coor.y === this._x0y0.y && coor.y === this._x1y1.y
         );
     }
 

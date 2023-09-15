@@ -1,110 +1,106 @@
 // Reference: https://www.geeksforgeeks.org/quad-tree/
 
-import { Coor2D } from "./grid";
+//import { Point.XY } from "./grid";
+import * as Point from "./base/points";
+import * as Shape from "./base/shapes";
 
-// class Node<T> {
-//     active: boolean;
-//     data: T;
-//     coor: Coor2D; // Can this also be generic?
+class Base2Rect extends Shape.Rectangle {
 
-//     constructor(_coor: Coor2D, _data: T) {
-//         this.data = _data;
-//         this.coor = _coor;
-//     }
+    
+}
 
-// }
 
 // Rectangle
-class Bounds {
+// class BoundsOld {
 
-    readonly x0y0: Coor2D;
-    readonly x1y1: Coor2D;
+//     readonly x0y0: Point.XY;
+//     readonly x1y1: Point.XY;
 
-    constructor(x0y0: Coor2D, x1y1: Coor2D) {
-        // TODO: Sanitize Bounds, maybe create a SquareBase2 subclass?
+//     constructor(x0y0: Point.XY, x1y1: Point.XY) {
+//         // TODO: Sanitize Bounds, maybe create a SquareBase2 subclass?
 
-        this.x0y0 = Coor2D.Copy(x0y0);
-        this.x1y1 = Coor2D.Copy(x1y1);
-    }
+//         this.x0y0 = Point.XY.Copy(x0y0);
+//         this.x1y1 = Point.XY.Copy(x1y1);
+//     }
 
-    /**
-     * @param delta Shift while copying
-     */
-    copy = (delta?: Coor2D) => {
-        let x0y0 = Coor2D.Copy(this.x0y0);
-        let x1y1 = Coor2D.Copy(this.x1y1);
-        if (delta) {
-            x0y0.x += delta.x;
-            x1y1.x += delta.x;
-            x0y0.y += delta.y;
-            x1y1.y += delta.y;
-        }
-        return new Bounds(x0y0, x1y1);
-    }
+//     /**
+//      * @param delta Shift while copying
+//      */
+//     copy = (delta?: Point.XY) => {
+//         let x0y0 = Point.XY.Copy(this.x0y0);
+//         let x1y1 = Point.XY.Copy(this.x1y1);
+//         if (delta) {
+//             x0y0.x += delta.x;
+//             x1y1.x += delta.x;
+//             x0y0.y += delta.y;
+//             x1y1.y += delta.y;
+//         }
+//         return new Bounds(x0y0, x1y1);
+//     }
 
-    //TODO: Unit test this guy
-    intersects = (other: Bounds): boolean => {
-        const rangeX = [[this.x0y0.x, this.x1y1.x], [other.x0y0.x, other.x1y1.x]];
-        const rangeY = [[this.x0y0.y, this.x1y1.y], [other.x0y0.y, other.x1y1.y]];
+//     //TODO: Unit test this guy
+//     intersects = (other: Bounds): boolean => {
+//         const rangeX = [[this.x0y0.x, this.x1y1.x], [other.x0y0.x, other.x1y1.x]];
+//         const rangeY = [[this.x0y0.y, this.x1y1.y], [other.x0y0.y, other.x1y1.y]];
 
-        // TODO: Too confusing?
-        return [rangeX, rangeY].reduce((prev, cur) => {
-            if (!prev) return false;
-            // Sort each range pair based on the lowest value (x0y0)
-            const sorted = cur.sort((a, b) => a[0] - b[0]);
-            // If the lowest value of the "high" is less than the highest value of the "low", it intersects
-            // "On edge" counts
-            const result = sorted[1][0] <= sorted[0][1];
-            return result;
-        }, true);
-    }
+//         // TODO: Too confusing?
+//         return [rangeX, rangeY].reduce((prev, cur) => {
+//             if (!prev) return false;
+//             // Sort each range pair based on the lowest value (x0y0)
+//             const sorted = cur.sort((a, b) => a[0] - b[0]);
+//             // If the lowest value of the "high" is less than the highest value of the "low", it intersects
+//             // "On edge" counts
+//             const result = sorted[1][0] <= sorted[0][1];
+//             return result;
+//         }, true);
+//     }
 
-    //TODO: Unit test this guy
-    contains = (other: Bounds): boolean => {
-        const rangeX = [[this.x0y0.x, this.x1y1.x], [other.x0y0.x, other.x1y1.x]];
-        const rangeY = [[this.x0y0.y, this.x1y1.y], [other.x0y0.y, other.x1y1.y]];
+//     //TODO: Unit test this guy
+//     contains = (other: Bounds): boolean => {
+//         const rangeX = [[this.x0y0.x, this.x1y1.x], [other.x0y0.x, other.x1y1.x]];
+//         const rangeY = [[this.x0y0.y, this.x1y1.y], [other.x0y0.y, other.x1y1.y]];
 
-        // TODO: Too confusing
-        return [rangeX, rangeY].reduce((prev, cur) => {
-            if (!prev) return false;
-            // cur[0] this
-            // cur[1] other
-            // this's low is lower (or equal) than other's low and this's high is higher than (or equal) other's high
-            const result = cur[0][0] <= cur[1][0] && cur[0][1] >= cur[1][1];
-            return result;
-        }, true);
-    }
+//         // TODO: Too confusing
+//         return [rangeX, rangeY].reduce((prev, cur) => {
+//             if (!prev) return false;
+//             // cur[0] this
+//             // cur[1] other
+//             // this's low is lower (or equal) than other's low and this's high is higher than (or equal) other's high
+//             const result = cur[0][0] <= cur[1][0] && cur[0][1] >= cur[1][1];
+//             return result;
+//         }, true);
+//     }
 
-    // Approximate center (rounded to next integer)
-    center = (): Coor2D => {
-        const dimX = this.x1y1.x - this.x0y0.x;
-        const dimY = this.x1y1.y - this.x0y0.y;
-        const center = new Coor2D(Math.ceil(dimX / 2), Math.ceil(dimY / 2));
-        return center;
-    }
+//     // Approximate center (rounded to next integer)
+//     center = (): Point.XY => {
+//         const dimX = this.x1y1.x - this.x0y0.x;
+//         const dimY = this.x1y1.y - this.x0y0.y;
+//         const center = new Point.XY(Math.ceil(dimX / 2), Math.ceil(dimY / 2));
+//         return center;
+//     }
 
-    hasCoor2D = (coor: Coor2D): Boolean => {
-        return (
-            coor.x >= this.x0y0.x && coor.x <= this.x1y1.x &&
-            coor.y >= this.x0y0.y && coor.y <= this.x1y1.y
-        );
-    }
+//     hasPoint.XY = (coor: Point.XY): Boolean => {
+//         return (
+//             coor.x >= this.x0y0.x && coor.x <= this.x1y1.x &&
+//             coor.y >= this.x0y0.y && coor.y <= this.x1y1.y
+//         );
+//     }
 
-    isCoor2D = (coor: Coor2D): Boolean => {
-        return (
-            coor.x === this.x0y0.x && coor.x === this.x1y1.x &&
-            coor.y === this.x0y0.y && coor.y === this.x1y1.y
-        );
-    }
+//     isPoint.XY = (coor: Point.XY): Boolean => {
+//         return (
+//             coor.x === this.x0y0.x && coor.x === this.x1y1.x &&
+//             coor.y === this.x0y0.y && coor.y === this.x1y1.y
+//         );
+//     }
 
-};
+// };
 
 // Consider also a data structure that holds a quadtree, but can resize the root!
 
 class QuadTree<T> {
 
     //node: Node<T>; // This is where data is stored
-    //coor: Coor2D; // Can this also be generic?
+    //coor: Point.XY; // Can this also be generic?
 
     active: boolean;
     data: T | null;
@@ -115,7 +111,7 @@ class QuadTree<T> {
      * x1y1: Bottom Right
      * ```
      */
-    readonly bounds: Bounds;
+    readonly bounds: Base2Rect;
 
     readonly area: number;
 
@@ -138,7 +134,7 @@ class QuadTree<T> {
         x1y1: QuadTree<T>;
     } | null;
 
-    constructor(bounds: Bounds) {
+    constructor(bounds: Base2Rect) {
 
         // Find a power of 2 higher than the bounds?
         const dim = bounds.x1y1.x - bounds.x0y0.x;
@@ -178,23 +174,23 @@ class QuadTree<T> {
 
         const splitDim = Math.floor(currentBoundDimension / 2);
 
-        let shift = splitDim+1;
+        let shift = splitDim + 1;
         if (splitDim === 0) {
             shift = 1;
             console.log('chek it')
         }
 
         const shifts = {
-            x0y0: new Coor2D(0, 0),
-            x0y1: new Coor2D(0, shift),
-            x1y0: new Coor2D(shift, 0),
-            x1y1: new Coor2D(shift, shift)
+            x0y0: new Point.XY(0, 0),
+            x0y1: new Point.XY(0, shift),
+            x1y0: new Point.XY(shift, 0),
+            x1y1: new Point.XY(shift, shift)
         }
 
         const splitBounds = {
-            x0y0: new Bounds(
+            x0y0: new Base2Rect(
                 this.bounds.x0y0,
-                new Coor2D(
+                new Point.XY(
                     this.bounds.x0y0.x + splitDim,
                     this.bounds.x0y0.y + splitDim
                 )
@@ -217,7 +213,7 @@ class QuadTree<T> {
     }
 
     // "Inserts" data into the bounded area
-    Set = (bounds: Bounds, data: T) => {
+    Set = (bounds: Base2Rect, data: T) => {
 
         // Is this quadtree completely within the bounds
 
@@ -257,11 +253,11 @@ class QuadTree<T> {
         }
     }
 
-    Get = (coor: Coor2D): T => {
+    Get = (coor: Point.XY): T => {
         // recurse through quads to find the data point.
 
         // If we're here, return the data
-        if (this.bounds.isCoor2D(coor)) {
+        if (this.bounds.isPoint(coor)) {
             return this.data;
         }
 
@@ -269,7 +265,7 @@ class QuadTree<T> {
         let containingQuad: QuadTree<T> = null;
         for (const [key, quad] of Object.entries(this.quads)) {
             //console.log(`${key}: ${value}`);
-            if (quad.bounds.hasCoor2D(coor)) {
+            if (quad.bounds.hasPoint(coor)) {
                 containingQuad = quad;
             }
         }
@@ -288,7 +284,7 @@ class QuadTreeExpanding<T>{
     static BUFFER = .1; // TODO: This shouldn't be necessary once expansion works
     root: QuadTree<T>;
 
-    constructor(bounds: Bounds) {
+    constructor(bounds: Base2Rect) {
 
         // Find max offset from 0,0?
 
@@ -296,7 +292,7 @@ class QuadTreeExpanding<T>{
 
         // Actually, just storing an offset at the root would probably be smarter, although harder to debug
 
-        //const center: Coor2D = bounds.center();
+        //const center: Point.XY = bounds.center();
 
 
         const dimX = bounds.x1y1.x - bounds.x0y0.x;
@@ -314,19 +310,19 @@ class QuadTreeExpanding<T>{
         const base2Dimension = Math.pow(2, pow) - 1;
         //const halfBase = base2Dimension / 2;        
 
-        // const x0y0 = new Coor2D(center.x - halfBase, center.y - halfBase);
-        // const x1y1 = new Coor2D(center.x + halfBase, center.y + halfBase);       
+        // const x0y0 = new Point.XY(center.x - halfBase, center.y - halfBase);
+        // const x1y1 = new Point.XY(center.x + halfBase, center.y + halfBase);       
 
-        const x0y0 = new Coor2D(bounds.x0y0.x - offset, bounds.x0y0.y - offset);
-        const x1y1 = new Coor2D(x0y0.x + base2Dimension, x0y0.y + base2Dimension);
+        const x0y0 = new Point.XY(bounds.x0y0.x - offset, bounds.x0y0.y - offset);
+        const x1y1 = new Point.XY(x0y0.x + base2Dimension, x0y0.y + base2Dimension);
 
-        const base2Bounds = new Bounds(x0y0, x1y1);
+        const base2Bounds = new Base2Rect(x0y0, x1y1);
 
         this.root = new QuadTree<T>(base2Bounds);
     }
 
     // TODO: Make it expand!
-    Set = (bounds: Bounds, data: T) => {
+    Set = (bounds: Base2Rect, data: T) => {
 
         // while (!this.root.bounds.contains(bounds)) {
 
@@ -337,5 +333,5 @@ class QuadTreeExpanding<T>{
     }
 }
 
-export { QuadTree, Bounds, QuadTreeExpanding };
+export { QuadTree, Base2Rect, QuadTreeExpanding };
 
