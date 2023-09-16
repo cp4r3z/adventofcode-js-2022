@@ -178,7 +178,8 @@ const part2 = (input: string, row: number): Number => {
     // const test2 = Q.Get(new Point.XY(1,1));
 
     const bounds1 = new Base2Rect(new Point.XY(0, 0), new Point.XY(3, 3));
-    const Q1 = new QuadTreeExpanding<Boolean>(bounds1);
+    const bounds3 = new Base2Rect(new Point.XY(0, 0), new Point.XY(3, 5));
+    const Q1 = new QuadTree<Boolean>(bounds1);
     Q1.Set(new Base2Rect(new Point.XY(0, 0), new Point.XY(0, 2)), true); // should be 3 places
 
 
@@ -195,6 +196,7 @@ const part2 = (input: string, row: number): Number => {
 
     const top = new Point.XY(8, -2);
     const bot = new Point.XY(8, 16);
+    const sensorTest = new Base2Rect(top,bot);
     const sensor = new Base2Rect(Transformer.XY2UV(top), Transformer.XY2UV(bot));
 
     Q2.Set(sensor, true); // we need a get

@@ -4,11 +4,74 @@
 import * as Point from "./base/points";
 import * as Shape from "./base/shapes";
 
-class Base2Rect extends Shape.Rectangle {
+export const RectangleToBase2 = (rect: Shape.Rectangle, buffer: number = 0) => {
+    const rangeX = Math.abs(rect.x1y1.x - rect.x0y0.x);
+    const rangeY = Math.abs(rect.x1y1.y - rect.x0y0.y);
+    const maxRange = Math.max(rangeX, rangeY) + 1;
 
-    
+    const offset = Math.ceil(maxRange * buffer / 2); // This gets added to all dimensions.
+
+    const x0y0_ = new Point.XY(rect.x0y0.x - offset, rect.x0y0.y - offset);
+    //let x1y1_ = new Point.XY(x1y1.x + offset, x1y1.y + offset);
+
+    // Find a power of 2 higher than the bounds?        
+    // Figure out how big the quadtree needs to be (how many levels deep)
+
+    const pow = Math.ceil(Math.log2(maxRange + (2 * offset)));
+    const base2Dimension = Math.pow(2, pow);
+    const x1y1_ = new Point.XY(x0y0_.x + base2Dimension - 1, x0y0_.y + base2Dimension - 1);
+
+    return new Shape.Rectangle(x0y0_, x1y1_);
 }
 
+//export const yourFunctionName = () => console.log("say hello");
+
+class Base2Rect extends Shape.Rectangle {
+
+    /**
+     * 
+     * @param x0y0 
+     * @param x1y1 
+     * @param buffer (as a percentage)
+     * @returns 
+     */
+    static Base2Points = (
+        x0y0: Point.IPoint2D,
+        x1y1: Point.IPoint2D,
+        buffer: number = 0): {
+            x0y0: Point.IPoint2D,
+            x1y1: Point.IPoint2D
+        } => {
+
+        const rangeX = Math.abs(x1y1.x - x0y0.x);
+        const rangeY = Math.abs(x1y1.y - x0y0.y);
+        const maxRange = Math.max(rangeX, rangeY) + 1;
+
+        const offset = Math.ceil(maxRange * buffer / 2); // This gets added to all dimensions.
+
+        const x0y0_ = new Point.XY(x0y0.x - offset, x0y0.y - offset);
+        //let x1y1_ = new Point.XY(x1y1.x + offset, x1y1.y + offset);
+
+        // Find a power of 2 higher than the bounds?        
+        // Figure out how big the quadtree needs to be (how many levels deep)
+
+        const pow = Math.ceil(Math.log2(maxRange + (2 * offset)));
+        const base2Dimension = Math.pow(2, pow);
+        const x1y1_ = new Point.XY(x0y0_.x + base2Dimension - 1, x0y0_.y + base2Dimension - 1);
+
+        return { x0y0: x0y0_, x1y1: x1y1_ };
+    }
+
+    constructor(x0y0: Point.IPoint2D, x1y1: Point.IPoint2D, buffer: number = 0) {
+        const base2Points = Base2Rect.Base2Points(x0y0, x1y1, buffer);
+        super(base2Points.x0y0, base2Points.x1y1);
+    }
+
+    setActive = (rect: Shape.Rectangle) => {
+
+    }
+
+}
 
 // Rectangle
 // class BoundsOld {
@@ -105,13 +168,8 @@ class QuadTree<T> {
     active: boolean;
     data: T | null;
 
-    /**
-     * ```
-     * x0y0: Top Left
-     * x1y1: Bottom Right
-     * ```
-     */
-    readonly bounds: Base2Rect;
+
+    readonly bounds: Shape.Rectangle; // Anything more fancy can be done here in the class
 
     readonly area: number;
 
@@ -134,7 +192,7 @@ class QuadTree<T> {
         x1y1: QuadTree<T>;
     } | null;
 
-    constructor(bounds: Base2Rect) {
+    constructor(bounds: Shape.Rectangle) {
 
         // Find a power of 2 higher than the bounds?
         const dim = bounds.x1y1.x - bounds.x0y0.x;
@@ -188,7 +246,7 @@ class QuadTree<T> {
         }
 
         const splitBounds = {
-            x0y0: new Base2Rect(
+            x0y0: new Shape.Rectangle(
                 this.bounds.x0y0,
                 new Point.XY(
                     this.bounds.x0y0.x + splitDim,
@@ -212,8 +270,10 @@ class QuadTree<T> {
         return true;
     }
 
-    // "Inserts" data into the bounded area
-    Set = (bounds: Base2Rect, data: T) => {
+    /**
+     * "Inserts" / "Fills" data into the bounded area
+     */
+    Set = (bounds: Shape.Rectangle, data: T) => {
 
         // Is this quadtree completely within the bounds
 
@@ -316,7 +376,7 @@ class QuadTreeExpanding<T>{
         const x0y0 = new Point.XY(bounds.x0y0.x - offset, bounds.x0y0.y - offset);
         const x1y1 = new Point.XY(x0y0.x + base2Dimension, x0y0.y + base2Dimension);
 
-        const base2Bounds = new Base2Rect(x0y0, x1y1);
+        const base2Bounds = new Base2Rect(x0y0, x1y1, 1);
 
         this.root = new QuadTree<T>(base2Bounds);
     }

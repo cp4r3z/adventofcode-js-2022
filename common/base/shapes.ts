@@ -2,7 +2,10 @@
 import * as Point from "./points"
 
 /**
- * Cannot Resize
+ * ```
+ * x0y0: Top Left
+ * x1y1: Bottom Right
+ * ```
  */
 export class Rectangle {
 
@@ -49,8 +52,15 @@ export class Rectangle {
     public get minY(): number { return this._x0y0.y; }
     public get maxY(): number { return this._x1y1.y; }
 
-    public get deltaX(): number { return this.maxX - this.minX; }
-    public get deltaY(): number { return this.maxY - this.minY; }
+    deltaX = (asGrid: boolean): number => this.maxX - this.minX + (asGrid ? 1 : 0);
+    deltaY = (asGrid: boolean): number => this.maxY - this.minY + (asGrid ? 1 : 0);
+    
+    /**
+     * TODO: This is the area of the rectangle, NOT the active area
+     * @param asGrid Counts vertices as units
+     * @returns 
+     */
+    area = (asGrid: boolean): number => this.deltaX(asGrid) * this.deltaY(asGrid);
 
     /**
      * @param delta move while copying
@@ -69,17 +79,7 @@ export class Rectangle {
     move = (delta: Point.XY) => {
         this._x0y0.move(delta);
         this._x1y1.move(delta);
-    }
-
-    area = (asGrid: boolean): number => {
-        let dx = this.deltaX;
-        let dy = this.deltaY;
-        if (asGrid) {
-            dx = this.deltaX + 1;
-            dy = this.deltaY + 1;
-        }
-        return dx * dy;
-    }
+    }    
 
     //TODO: Unit test this guy
     intersects = (other: Rectangle): boolean => {
