@@ -1,7 +1,6 @@
-import { jest } from '@jest/globals';
-import * as Shape from '../out/common/base/shapes'
-import * as Point from '../out/common/base/points';
-import { QuadTree, RectangleToBase2 } from '../out/common/quadtree';
+import * as Shape from './base/shapes'
+import * as Point from './base/points';
+import * as QuadTree from './quadtree';
 
 xdescribe('Common Tests: Shape.Rectangle', () => {
     const r_x0y0 = new Point.XY(-1, -1);
@@ -93,34 +92,35 @@ describe('Common Tests: QuadTree', () => {
         x1y1: new Point.XY(10, 10)
     };
 
-    it('Construct: Base2 Rectangle', async () => {
-        const b2x2 = RectangleToBase2(new Shape.Rectangle(r2x2.x0y0, r2x2.x1y1))
+    it('QuadTree.Rectangle', async () => {
+        const b2x2 = new QuadTree.Rectangle(r2x2.x0y0, r2x2.x1y1, { isRoot: true });
         expect(b2x2.x0y0.x).toBe(0);
         expect(b2x2.x0y0.y).toBe(0);
         expect(b2x2.x1y1.x).toBe(1);
         expect(b2x2.x1y1.y).toBe(1);
 
-        const b4x4 = RectangleToBase2(new Shape.Rectangle(r4x4.x0y0, r4x4.x1y1));
+        const b4x4 = new QuadTree.Rectangle(r4x4.x0y0, r4x4.x1y1, { isRoot: true });
         expect(b4x4.x0y0.x).toBe(0);
         expect(b4x4.x0y0.y).toBe(0);
         expect(b4x4.x1y1.x).toBe(3);
         expect(b4x4.x1y1.y).toBe(3);
 
-        const b3x3 = RectangleToBase2(new Shape.Rectangle(r3x3.x0y0, r3x3.x1y1));
+        const b3x3 = new QuadTree.Rectangle(r3x3.x0y0, r3x3.x1y1, { isRoot: true });
         expect(b3x3.deltaX()).toBe(3);
         expect(b3x3.deltaY()).toBe(3);
         expect(b3x3.deltaX(true)).toBe(4);
         expect(b3x3.deltaY(true)).toBe(4);
         expect(b3x3.area(true)).toBe(16);
 
-        const b1x4 = RectangleToBase2(new Shape.Rectangle(r1x4.x0y0, r1x4.x1y1));
+        const b1x4 = new QuadTree.Rectangle(r1x4.x0y0, r1x4.x1y1, { isRoot: true });
         expect(b1x4.x0y0.x).toBe(0);
         expect(b1x4.x0y0.y).toBe(0);
         expect(b1x4.x1y1.x).toBe(3);
         expect(b1x4.x1y1.y).toBe(3);
         expect(b1x4.area(true)).toBe(16);
+        // TODO: ACTIVE AREA
 
-        const b1x4Buffered = RectangleToBase2(new Shape.Rectangle(r1x4.x0y0, r1x4.x1y1), .25);
+        const b1x4Buffered = new QuadTree.Rectangle(r1x4.x0y0, r1x4.x1y1, { isRoot: true, buffer: .25 });
         expect(b1x4Buffered.x0y0.x).toBe(-1);
         expect(b1x4Buffered.x0y0.y).toBe(-1);
         expect(b1x4Buffered.x1y1.x).toBe(6);
@@ -129,7 +129,7 @@ describe('Common Tests: QuadTree', () => {
         expect(b1x4Buffered.deltaY(true)).toBe(8);
         expect(b1x4Buffered.area(true)).toBe(64);
 
-        const b20x20 = RectangleToBase2(new Shape.Rectangle(r20x20.x0y0, r20x20.x1y1));
+        const b20x20 = new QuadTree.Rectangle(r20x20.x0y0, r20x20.x1y1, { isRoot: true });
         expect(b20x20.x0y0.x).toBe(-10);
         expect(b20x20.x0y0.y).toBe(-10);
         expect(b20x20.x1y1.x).toBe(21);
@@ -138,7 +138,7 @@ describe('Common Tests: QuadTree', () => {
         expect(b20x20.deltaY(true)).toBe(32);
         expect(b20x20.area(true)).toBe(1024);
 
-        const b20x20Buffered = RectangleToBase2(new Shape.Rectangle(r20x20.x0y0, r20x20.x1y1), .25);
+        const b20x20Buffered = new QuadTree.Rectangle(r20x20.x0y0, r20x20.x1y1, { isRoot: true, buffer: .25 });
         expect(b20x20Buffered.x0y0.x).toBe(-13);
         expect(b20x20Buffered.x0y0.y).toBe(-13);
         expect(b20x20Buffered.x1y1.x).toBe(18);
@@ -148,7 +148,7 @@ describe('Common Tests: QuadTree', () => {
         expect(b20x20Buffered.area(true)).toBe(1024);
     });
 
-    it('Construct', async () => {
+    it('QuadTree', async () => {
 
         //const qt = new QuadTree();
 

@@ -2,7 +2,7 @@ import { Grid2D, Coor2D } from '../common/grid';
 import * as Point from '../common/base/points';
 import * as Shape from '../common/base/shapes';
 
-import { QuadTree, Base2Rect, QuadTreeExpanding } from '../common/quadtree';
+import * as QuadTree  from '../common/quadtree';
 
 class Beacon extends Point.XY {
     //readonly sensor // not really necessary, but we could create a back-link to the sensor
@@ -177,29 +177,29 @@ const part2 = (input: string, row: number): Number => {
     // const test1 = Q.Get(new Point.XY(0,1));
     // const test2 = Q.Get(new Point.XY(1,1));
 
-    const bounds1 = new Base2Rect(new Point.XY(0, 0), new Point.XY(3, 3));
-    const bounds3 = new Base2Rect(new Point.XY(0, 0), new Point.XY(3, 5));
-    const Q1 = new QuadTree<Boolean>(bounds1);
-    Q1.Set(new Base2Rect(new Point.XY(0, 0), new Point.XY(0, 2)), true); // should be 3 places
+    const bounds1 = new QuadTree.Rectangle(new Point.XY(0, 0), new Point.XY(3, 3));
+    const bounds3 = new QuadTree.Rectangle(new Point.XY(0, 0), new Point.XY(3, 5));
+    const Q1 = new QuadTree.QuadTree<Boolean>(bounds1);
+    Q1.Set(new QuadTree.Rectangle(new Point.XY(0, 0), new Point.XY(0, 2)), true); // should be 3 places
 
 
     //const bounds2 = new Bounds(new Point.XY(0, 0), new Point.XY(4e6, 4e6)); // Not a power of 2
-    const bounds2 = new Base2Rect(
+    const bounds2 = new QuadTree.Rectangle(
         Transformer.XY2UV(new Point.XY(-2, -2)),
         Transformer.XY2UV(new Point.XY(25, 22))
     ); // Not a power of 2
 
-    const Q2 = new QuadTreeExpanding<Boolean>(bounds2);
+    //const Q2 = new QuadTreeExpanding<Boolean>(bounds2);
 
     // Feed in top and bottom of the sensor (in x,y)
     // top (8, -2), bottom (8, -16)
 
     const top = new Point.XY(8, -2);
     const bot = new Point.XY(8, 16);
-    const sensorTest = new Base2Rect(top,bot);
-    const sensor = new Base2Rect(Transformer.XY2UV(top), Transformer.XY2UV(bot));
+    const sensorTest = new QuadTree.Rectangle(top,bot);
+    const sensor = new QuadTree.Rectangle(Transformer.XY2UV(top), Transformer.XY2UV(bot));
 
-    Q2.Set(sensor, true); // we need a get
+    //Q2.Set(sensor, true); // we need a get
 
     const G2 = new Grid2D();
 

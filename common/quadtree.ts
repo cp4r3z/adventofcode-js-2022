@@ -4,7 +4,7 @@
 import * as Point from "./base/points";
 import * as Shape from "./base/shapes";
 
-export const RectangleToBase2 = (rect: Shape.Rectangle, buffer: number = 0) => {
+const RectangleToBase2 = (rect: Shape.Rectangle, buffer: number = 0) => {
     const rangeX = Math.abs(rect.x1y1.x - rect.x0y0.x);
     const rangeY = Math.abs(rect.x1y1.y - rect.x0y0.y);
     const maxRange = Math.max(rangeX, rangeY) + 1;
@@ -25,6 +25,66 @@ export const RectangleToBase2 = (rect: Shape.Rectangle, buffer: number = 0) => {
 }
 
 //export const yourFunctionName = () => console.log("say hello");
+
+export type RectangleOptions = {
+    buffer?: number,
+    isRoot?: boolean
+}
+
+/**     
+ * @param buffer (as a percentage)
+ * @returns 
+ */
+export class Rectangle extends Shape.Rectangle {
+    public static Base2Points = (
+        x0y0: Point.IPoint2D,
+        x1y1: Point.IPoint2D,
+        buffer: number = 0): {
+            x0y0: Point.IPoint2D,
+            x1y1: Point.IPoint2D
+        } => {
+
+        const rangeX = Math.abs(x1y1.x - x0y0.x);
+        const rangeY = Math.abs(x1y1.y - x0y0.y);
+        const maxRange = Math.max(rangeX, rangeY) + 1;
+
+        const offset = Math.ceil(maxRange * buffer / 2); // This gets added to all dimensions.
+
+        const x0y0_ = new Point.XY(x0y0.x - offset, x0y0.y - offset);
+
+        // Find a power of 2 higher than the bounds?        
+        // Figure out how big the quadtree needs to be (how many levels deep)
+
+        const pow = Math.ceil(Math.log2(maxRange + (2 * offset)));
+        const base2Dimension = Math.pow(2, pow);
+        const x1y1_ = new Point.XY(x0y0_.x + base2Dimension - 1, x0y0_.y + base2Dimension - 1);
+
+        //return new Shape.Rectangle(x0y0_, x1y1_);
+        return { x0y0: x0y0_, x1y1: x1y1_ };
+    }
+
+    constructor(
+        x0y0: Point.IPoint2D,
+        x1y1: Point.IPoint2D,
+        options?: RectangleOptions) {
+        let isRoot = false;
+        let buffer = 0;
+        if (options) {
+            isRoot = !!(options.isRoot);
+            buffer = options.buffer || 0;
+        }
+
+        if (isRoot) {
+            const base2Points = Base2Rect.Base2Points(x0y0, x1y1, buffer);
+            super(base2Points.x0y0, base2Points.x1y1);
+        } else {
+            // If we're not at the root rectangle, assume we already have a Base 2 Rectangle
+            super(x0y0, x1y1);
+        }
+    }
+}
+
+
 
 class Base2Rect extends Shape.Rectangle {
 
@@ -68,7 +128,7 @@ class Base2Rect extends Shape.Rectangle {
     }
 
     setActive = (rect: Shape.Rectangle) => {
-
+        //const test = new Base2.Rectangle();
     }
 
 }
@@ -160,30 +220,32 @@ class Base2Rect extends Shape.Rectangle {
 
 // Consider also a data structure that holds a quadtree, but can resize the root!
 
-class QuadTree<T> {
+export class QuadTree<T> {
 
-    //node: Node<T>; // This is where data is stored
-    //coor: Point.XY; // Can this also be generic?
+    readonly bounds: Rectangle;
 
     active: boolean;
     data: T | null;
 
-
-    readonly bounds: Shape.Rectangle; // Anything more fancy can be done here in the class
-
-    readonly area: number;
-
-    // origin (0,0) is located in the top-left corner
-    // Y "DOWN", X "RIGHT"
-
     /**
+     * In general, qx1y1 is greater than qx0y0
+     * 
+     * * IF Y is "DOWN":
      * ```
      * +-------------+-------------+
      * | (0,0) qx0y0 | (1,0) qx1y0 |
      * +-------------+-------------+
      * | (0,1) qx0y1 | (1,1) qx1y1 |
      * +-------------+-------------+
-     * ```     
+     * ```
+     * * IF Y is "UP":
+     * ```
+     * +-------------+-------------+
+     * | (0,1) qx0y1 | (1,1) qx1y1 |
+     * +-------------+-------------+ 
+     * | (0,0) qx0y0 | (1,0) qx1y0 |
+     * +-------------+-------------+ 
+     * ```
      */
     quads: {
         x0y0: QuadTree<T>;
@@ -192,16 +254,10 @@ class QuadTree<T> {
         x1y1: QuadTree<T>;
     } | null;
 
-    constructor(bounds: Shape.Rectangle) {
-
-        // Find a power of 2 higher than the bounds?
-        const dim = bounds.x1y1.x - bounds.x0y0.x;
-
+    constructor(bounds: Rectangle) {
 
         this.bounds = bounds.copy();
-        const dx = Math.abs(this.bounds.x1y1.x - this.bounds.x0y0.x) + 1;
-        const dy = Math.abs(this.bounds.x1y1.y - this.bounds.x0y0.y) + 1;
-        this.area = dx * dy;
+
 
         //this.node = null;
         this.data = null;
@@ -214,6 +270,8 @@ class QuadTree<T> {
         }
     }
 
+    area = (): number => this.bounds.area(true);
+
     get hasChildren(): Boolean { return !!(this.quads.x0y0) }; // Assumes if there's one quad, all four exist
 
     split = (): Boolean => {
@@ -225,17 +283,12 @@ class QuadTree<T> {
             return false;
         }
 
-        // if (currentBoundDimension === 1) {
-
-        //     return true;
-        // }
-
         const splitDim = Math.floor(currentBoundDimension / 2);
 
         let shift = splitDim + 1;
         if (splitDim === 0) {
             shift = 1;
-            console.log('chek it')
+            console.log('check it')
         }
 
         const shifts = {
@@ -392,6 +445,4 @@ class QuadTreeExpanding<T>{
         this.root.Set(bounds, data);
     }
 }
-
-export { QuadTree, Base2Rect, QuadTreeExpanding };
 

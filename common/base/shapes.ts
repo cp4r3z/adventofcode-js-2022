@@ -52,15 +52,15 @@ export class Rectangle {
     public get minY(): number { return this._x0y0.y; }
     public get maxY(): number { return this._x1y1.y; }
 
-    deltaX = (asGrid: boolean): number => this.maxX - this.minX + (asGrid ? 1 : 0);
-    deltaY = (asGrid: boolean): number => this.maxY - this.minY + (asGrid ? 1 : 0);
+    deltaX = (asGrid?: boolean): number => this.maxX - this.minX + (asGrid ? 1 : 0);
+    deltaY = (asGrid?: boolean): number => this.maxY - this.minY + (asGrid ? 1 : 0);
     
     /**
      * TODO: This is the area of the rectangle, NOT the active area
      * @param asGrid Counts vertices as units
      * @returns 
      */
-    area = (asGrid: boolean): number => this.deltaX(asGrid) * this.deltaY(asGrid);
+    area = (asGrid?: boolean): number => this.deltaX(asGrid) * this.deltaY(asGrid);
 
     /**
      * @param delta move while copying
