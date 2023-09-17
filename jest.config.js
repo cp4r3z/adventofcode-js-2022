@@ -1,9 +1,8 @@
 export default {
-    
-        transform: {
-            '^.+\\.(ts|tsx)$': 'ts-jest',
-        },
-    
     //verbose: false,
-    setupFilesAfterEnv:["./jest.console.js"]
+    transform: {
+        "^.+\\.tsx?$": "ts-jest"
+    },
+    testMatch: ["**/?(*.)+(test).js"],
+    setupFilesAfterEnv: ["./jest.console.js"]
 };

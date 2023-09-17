@@ -2,7 +2,7 @@ import * as Shape from './base/shapes'
 import * as Point from './base/points';
 import * as QuadTree from './quadtree';
 
-xdescribe('Common Tests: Shape.Rectangle', () => {
+describe('Common Tests: Shape.Rectangle', () => {
     const r_x0y0 = new Point.XY(-1, -1);
     const r_x1y1 = new Point.XY(1, 1);
     const rTest = new Shape.Rectangle(r_x0y0, r_x1y1);

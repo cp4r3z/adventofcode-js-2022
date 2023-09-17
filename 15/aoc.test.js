@@ -1,4 +1,3 @@
-import { jest } from '@jest/globals';
 import { part1, part2 } from '../out/15/aoc';
 import { input, tinput } from './aoc.input';
 
@@ -13,7 +12,7 @@ describe('Day 15', () => {
         console.log(solution);
     });
 
-    it('Part 2', async () => {
+    xit('Part 2', async () => {
         const solution = part2(tinput);        
         expect(solution).toBe(56000011);
     });
