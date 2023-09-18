@@ -149,8 +149,41 @@ describe('Common Tests: QuadTree', () => {
     });
 
     it('QuadTree', async () => {
+        const b2x2 = new QuadTree.Rectangle(r2x2.x0y0, r2x2.x1y1, { isRoot: true });
+        const qt2x2 = new QuadTree.QuadTree(b2x2);
+        expect(qt2x2.area()).toBe(4);
 
-        //const qt = new QuadTree();
+        const b20x20Buffered = new QuadTree.Rectangle(r20x20.x0y0, r20x20.x1y1, { isRoot: true, buffer: .25 });
+        const qt20x20Buffered = new QuadTree.QuadTree(b20x20Buffered);
+        expect(qt20x20Buffered.area()).toBe(1024);
+    });
 
+    it('QuadTree Active State', async () => {
+        const b20x20 = new QuadTree.Rectangle(r20x20.x0y0, r20x20.x1y1, { isRoot: true });
+        const b20x20Buffered = new QuadTree.Rectangle(r20x20.x0y0, r20x20.x1y1, { isRoot: true, buffer: .25 });
+        const qt20x20Buffered = new QuadTree.QuadTree(b20x20Buffered);
+        expect(qt20x20Buffered.area()).toBe(1024);
+        qt20x20Buffered.SetActive(b20x20, QuadTree.ActiveState.ACTIVE);
+    });
+
+    it('QuadTree Set/Get', async () => {
+        const b2x2 = new QuadTree.Rectangle(r2x2.x0y0, r2x2.x1y1, { isRoot: true });
+        const qt2x2 = new QuadTree.QuadTree<String>(b2x2);
+        const b1x2 = new Shape.Rectangle(r2x2.x0y0, new Point.XY(0, 1));
+
+        qt2x2.Set(b1x2, "TEST");
+        const test = qt2x2.Get(new Shape.Rectangle(r2x2.x0y0, r2x2.x0y0));
+        expect(test).toBe("TEST");
+    });
+
+    it('QuadTree Set/Get Large', async () => {
+        const bLarge = new QuadTree.Rectangle(new Point.XY(-1e6, -1e6), new Point.XY(1e6, 1e6), { isRoot: true });
+        const qtLarge = new QuadTree.QuadTree<String>(bLarge);
+        const dataBounds = new Shape.Rectangle(new Point.XY(-1e3, -1e3), new Point.XY(1e3, 1e3));
+        qtLarge.Set(dataBounds, "TEST");
+        const test = qtLarge.Get(new Shape.Rectangle(new Point.XY(0, 0), new Point.XY(0, 0)));
+        expect(test).toBe("TEST");
+        const outside = qtLarge.Get(new Shape.Rectangle(new Point.XY(0, 0), new Point.XY(1e4, 0)));
+        expect(outside).toBeNull();
     });
 });

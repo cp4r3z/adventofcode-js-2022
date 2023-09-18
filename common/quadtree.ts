@@ -1,30 +1,7 @@
 // Reference: https://www.geeksforgeeks.org/quad-tree/
 
-//import { Point.XY } from "./grid";
 import * as Point from "./base/points";
 import * as Shape from "./base/shapes";
-
-const RectangleToBase2 = (rect: Shape.Rectangle, buffer: number = 0) => {
-    const rangeX = Math.abs(rect.x1y1.x - rect.x0y0.x);
-    const rangeY = Math.abs(rect.x1y1.y - rect.x0y0.y);
-    const maxRange = Math.max(rangeX, rangeY) + 1;
-
-    const offset = Math.ceil(maxRange * buffer / 2); // This gets added to all dimensions.
-
-    const x0y0_ = new Point.XY(rect.x0y0.x - offset, rect.x0y0.y - offset);
-    //let x1y1_ = new Point.XY(x1y1.x + offset, x1y1.y + offset);
-
-    // Find a power of 2 higher than the bounds?        
-    // Figure out how big the quadtree needs to be (how many levels deep)
-
-    const pow = Math.ceil(Math.log2(maxRange + (2 * offset)));
-    const base2Dimension = Math.pow(2, pow);
-    const x1y1_ = new Point.XY(x0y0_.x + base2Dimension - 1, x0y0_.y + base2Dimension - 1);
-
-    return new Shape.Rectangle(x0y0_, x1y1_);
-}
-
-//export const yourFunctionName = () => console.log("say hello");
 
 export type RectangleOptions = {
     buffer?: number,
@@ -75,62 +52,13 @@ export class Rectangle extends Shape.Rectangle {
         }
 
         if (isRoot) {
-            const base2Points = Base2Rect.Base2Points(x0y0, x1y1, buffer);
+            const base2Points = Rectangle.Base2Points(x0y0, x1y1, buffer);
             super(base2Points.x0y0, base2Points.x1y1);
         } else {
             // If we're not at the root rectangle, assume we already have a Base 2 Rectangle
             super(x0y0, x1y1);
         }
     }
-}
-
-
-
-class Base2Rect extends Shape.Rectangle {
-
-    /**
-     * 
-     * @param x0y0 
-     * @param x1y1 
-     * @param buffer (as a percentage)
-     * @returns 
-     */
-    static Base2Points = (
-        x0y0: Point.IPoint2D,
-        x1y1: Point.IPoint2D,
-        buffer: number = 0): {
-            x0y0: Point.IPoint2D,
-            x1y1: Point.IPoint2D
-        } => {
-
-        const rangeX = Math.abs(x1y1.x - x0y0.x);
-        const rangeY = Math.abs(x1y1.y - x0y0.y);
-        const maxRange = Math.max(rangeX, rangeY) + 1;
-
-        const offset = Math.ceil(maxRange * buffer / 2); // This gets added to all dimensions.
-
-        const x0y0_ = new Point.XY(x0y0.x - offset, x0y0.y - offset);
-        //let x1y1_ = new Point.XY(x1y1.x + offset, x1y1.y + offset);
-
-        // Find a power of 2 higher than the bounds?        
-        // Figure out how big the quadtree needs to be (how many levels deep)
-
-        const pow = Math.ceil(Math.log2(maxRange + (2 * offset)));
-        const base2Dimension = Math.pow(2, pow);
-        const x1y1_ = new Point.XY(x0y0_.x + base2Dimension - 1, x0y0_.y + base2Dimension - 1);
-
-        return { x0y0: x0y0_, x1y1: x1y1_ };
-    }
-
-    constructor(x0y0: Point.IPoint2D, x1y1: Point.IPoint2D, buffer: number = 0) {
-        const base2Points = Base2Rect.Base2Points(x0y0, x1y1, buffer);
-        super(base2Points.x0y0, base2Points.x1y1);
-    }
-
-    setActive = (rect: Shape.Rectangle) => {
-        //const test = new Base2.Rectangle();
-    }
-
 }
 
 // Rectangle
@@ -220,11 +148,17 @@ class Base2Rect extends Shape.Rectangle {
 
 // Consider also a data structure that holds a quadtree, but can resize the root!
 
+export enum ActiveState {
+    INACTIVE,
+    ACTIVE,
+    VARIOUS
+}
+
 export class QuadTree<T> {
 
     readonly bounds: Rectangle;
 
-    active: boolean;
+    active: ActiveState;
     data: T | null;
 
     /**
@@ -261,18 +195,20 @@ export class QuadTree<T> {
 
         //this.node = null;
         this.data = null;
-        this.active = true;
-        this.quads = {
-            x0y0: null,
-            x0y1: null,
-            x1y0: null,
-            x1y1: null
-        }
+        this.active = ActiveState.ACTIVE;
+        this.quads = null;
+
+        // {
+        //     x0y0: null,
+        //     x0y1: null,
+        //     x1y0: null,
+        //     x1y1: null
+        // }
     }
 
     area = (): number => this.bounds.area(true);
 
-    get hasChildren(): Boolean { return !!(this.quads.x0y0) }; // Assumes if there's one quad, all four exist
+    get hasChildren(): Boolean { return !!this.quads };
 
     split = (): Boolean => {
         // Note: This assumes a square quad!
@@ -288,7 +224,6 @@ export class QuadTree<T> {
         let shift = splitDim + 1;
         if (splitDim === 0) {
             shift = 1;
-            console.log('check it')
         }
 
         const shifts = {
@@ -315,32 +250,61 @@ export class QuadTree<T> {
         splitBounds.x1y0 = splitBounds.x0y0.copy(shifts.x1y0);
         splitBounds.x1y1 = splitBounds.x0y0.copy(shifts.x1y1);
 
-        this.quads.x0y0 = new QuadTree(splitBounds.x0y0);
-        this.quads.x0y1 = new QuadTree(splitBounds.x0y1);
-        this.quads.x1y0 = new QuadTree(splitBounds.x1y0);
-        this.quads.x1y1 = new QuadTree(splitBounds.x1y1);
+        this.quads = {
+            x0y0: new QuadTree(splitBounds.x0y0),
+            x0y1: new QuadTree(splitBounds.x0y1),
+            x1y0: new QuadTree(splitBounds.x1y0),
+            x1y1: new QuadTree(splitBounds.x1y1)
+        };
+
+        for (const [key, quad] of Object.entries(this.quads)) {
+            quad.SetActive(this.bounds, this.active);
+        }
 
         return true;
+    }
+
+    SetActive = (bounds: Rectangle, activeState: ActiveState): void => {
+        if (bounds.contains(this.bounds)) {
+            this.active = activeState;
+            return;
+        }
+        if (bounds.intersects(this.bounds)) {
+            this.active = ActiveState.VARIOUS;
+
+            if (!this.hasChildren) {
+                const wasSplit = this.split();
+                if (!wasSplit) {
+                    throw new Error("Unexpected split");
+                }
+            }
+
+            for (const [key, quad] of Object.entries(this.quads)) {
+                quad.SetActive(bounds, activeState);
+            }
+        }
     }
 
     /**
      * "Inserts" / "Fills" data into the bounded area
      */
-    Set = (bounds: Shape.Rectangle, data: T) => {
+    Set = (bounds: Rectangle, data: T) => {
 
         // Is this quadtree completely within the bounds
 
         if (bounds.contains(this.bounds)) {
             this.data = data;
-            console.log('set!')
+            // this.active = ActiveState.ACTIVE;
+            //console.log('set!')
 
             // No need to have children anymore
-            this.quads = {
-                x0y0: null,
-                x0y1: null,
-                x1y0: null,
-                x1y1: null
-            };
+            this.quads = null;
+            //  {
+            //     x0y0: null,
+            //     x0y1: null,
+            //     x1y0: null,
+            //     x1y1: null
+            // };
 
             return;
         }
@@ -348,6 +312,13 @@ export class QuadTree<T> {
         // If the bounds intersects this, create quads if necessary and then set each quad
 
         if (bounds.intersects(this.bounds)) {
+
+            // this.active = ActiveState.VARIOUS;
+
+            if (this.data === data) {
+                return;
+            }
+
             this.data = null;
 
             if (!this.hasChildren) {
@@ -366,11 +337,10 @@ export class QuadTree<T> {
         }
     }
 
-    Get = (coor: Point.XY): T => {
+    Get = (bounds: Shape.Rectangle): T => {
         // recurse through quads to find the data point.
 
-        // If we're here, return the data
-        if (this.bounds.isPoint(coor)) {
+        if (!this.hasChildren && this.bounds.contains(bounds)) {
             return this.data;
         }
 
@@ -378,16 +348,16 @@ export class QuadTree<T> {
         let containingQuad: QuadTree<T> = null;
         for (const [key, quad] of Object.entries(this.quads)) {
             //console.log(`${key}: ${value}`);
-            if (quad.bounds.hasPoint(coor)) {
+            if (quad.bounds.contains(bounds)) {
                 containingQuad = quad;
             }
         }
 
         if (!containingQuad) {
-            console.error('Unable to find coor');
+            return null;
         }
 
-        return containingQuad.Get(coor);
+        return containingQuad.Get(bounds);
     }
 
 }
@@ -397,7 +367,7 @@ class QuadTreeExpanding<T>{
     static BUFFER = .1; // TODO: This shouldn't be necessary once expansion works
     root: QuadTree<T>;
 
-    constructor(bounds: Base2Rect) {
+    constructor(bounds: Rectangle) {
 
         // Find max offset from 0,0?
 
@@ -429,13 +399,13 @@ class QuadTreeExpanding<T>{
         const x0y0 = new Point.XY(bounds.x0y0.x - offset, bounds.x0y0.y - offset);
         const x1y1 = new Point.XY(x0y0.x + base2Dimension, x0y0.y + base2Dimension);
 
-        const base2Bounds = new Base2Rect(x0y0, x1y1, 1);
+        const base2Bounds = new Rectangle(x0y0, x1y1);
 
         this.root = new QuadTree<T>(base2Bounds);
     }
 
     // TODO: Make it expand!
-    Set = (bounds: Base2Rect, data: T) => {
+    Set = (bounds: Rectangle, data: T) => {
 
         // while (!this.root.bounds.contains(bounds)) {
 
