@@ -333,7 +333,25 @@ export class QuadTree<T> {
                 quad.Set(bounds, data);
             }
 
-            // TODO! If all children have the same value, set data and remove children
+            // If all children have the same value, set data and remove children
+
+            let allSame = true;
+            let quadData;
+
+            if (this.quads.x0y0.data !== null){
+                quadData = this.quads.x0y0.data;
+                for (const [key, quad] of Object.entries(this.quads)) {
+                    if (quad.data !== quadData){
+                        allSame = false;
+                        break;
+                    }
+                }
+            }   
+            
+            if (quadData !== null && quadData !== undefined && allSame) {
+                this.data = quadData;
+                this.quads = null;
+            }
         }
     }
 

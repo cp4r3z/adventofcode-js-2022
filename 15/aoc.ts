@@ -2,7 +2,7 @@ import { Grid2D, Coor2D } from '../common/grid';
 import * as Point from '../common/base/points';
 import * as Shape from '../common/base/shapes';
 
-import * as QuadTree  from '../common/quadtree';
+import * as QuadTree from '../common/quadtree';
 
 class Beacon extends Point.XY {
     //readonly sensor // not really necessary, but we could create a back-link to the sensor
@@ -10,6 +10,7 @@ class Beacon extends Point.XY {
 
 class Sensor extends Point.XY {
     readonly beacon: Beacon;
+    readonly range: number;
 
     /**
      * 
@@ -23,6 +24,7 @@ class Sensor extends Point.XY {
         const digits = matches.map(s => parseInt(s));
         super(digits[0], digits[1]);
         this.beacon = new Beacon(digits[2], digits[3]);
+        this.range = Math.abs(this.x - this.beacon.x) + Math.abs(this.y - this.beacon.y);
     }
 }
 
@@ -146,6 +148,15 @@ class Transformer {
     }
 
     /**
+     * @returns uv rect
+     */
+    static XY2UVRect = (xy: Shape.Rectangle): Shape.Rectangle => {
+        const u0v0 = Transformer.XY2UV(xy.x0y0);
+        const u1v1 = Transformer.XY2UV(xy.x1y1);
+        return new Shape.Rectangle(u0v0, u1v1);
+    }
+
+    /**
      * @returns xy
      */
     static UV2XY = (uv: Point.XY): Point.XY => {
@@ -155,17 +166,71 @@ class Transformer {
         const x = u - y;
         return new Point.XY(x, y);
     }
+
+    /**
+     * @returns xy rect
+     */
+    static UV2XYRect = (uv: Shape.Rectangle): Shape.Rectangle => {
+        const x0y0 = Transformer.UV2XY(uv.x0y0);
+        const x1y1 = Transformer.UV2XY(uv.x1y1);
+        return new Shape.Rectangle(x0y0, x1y1);
+    }
 }
 
+const FindGridBounds = (sensors: Sensor[]) => {
+    let x0 = sensors[0].x;
+    let x1 = sensors[0].x;
+    let y0 = sensors[0].y;
+    let y1 = sensors[0].y;
+
+    for (const sensor of sensors) {
+        if (sensor.x < x0) x0 = sensor.x;
+        if (sensor.beacon.x < x0) x0 = sensor.beacon.x;
+        if (sensor.x > x1) x1 = sensor.x;
+        if (sensor.beacon.x > x1) x1 = sensor.beacon.x;
+        if (sensor.y < y0) y0 = sensor.y;
+        if (sensor.beacon.y < y0) y0 = sensor.beacon.y;
+        if (sensor.y > y1) y1 = sensor.y;
+        if (sensor.beacon.y > y1) y1 = sensor.beacon.y;
+    }
+
+    return new Shape.Rectangle(new Point.XY(x0, y0), new Point.XY(x1, y1));
+}
+
+// I think we extend QuadTree to accept a Transformer... or include the transformer.
 
 const part2 = (input: string, row: number): Number => {
+    const sensors = parse(input);
+    const gridBounds: Shape.Rectangle = FindGridBounds(sensors);
+    const gridBoundsTweak = new Shape.Rectangle(
+        new Point.XY(gridBounds.x0y0.x,gridBounds.x0y0.y-gridBounds.deltaY()),
+        new Point.XY(gridBounds.x1y1.x,gridBounds.x1y1.y+gridBounds.deltaY()))
+    const gridBoundsTrans = Transformer.XY2UVRect(gridBoundsTweak);
+    const boundsTrans = new QuadTree.Rectangle(
+        gridBoundsTrans.x0y0, gridBoundsTrans.x1y1,
+        { isRoot: true, buffer: 2.00 } // Buffer of 200%
+    );
+
+    const QT = new QuadTree.QuadTree<String>(boundsTrans);
+
+    for (const sensor of sensors) {
+        const rangex0y0 = new Point.XY(sensor.x, sensor.y + sensor.range);
+        const rangex1y1 = new Point.XY(sensor.x, sensor.y - sensor.range);
+        const rangeTrans = Transformer.XY2UVRect(new Shape.Rectangle(rangex0y0, rangex1y1));
+        QT.Set(rangeTrans,'#');
+    }
+    for (const sensor of sensors){
+        
+        QT.Set(Transformer.XY2UVRect(new Shape.Rectangle(sensor,sensor)),'S');
+        QT.Set(Transformer.XY2UVRect(new Shape.Rectangle(sensor.beacon,sensor.beacon)),'B');
+    }
 
     // Yeah, honestly this is sounding more and more like I should have used a quadtree :-(
 
     //const bounds = new Bounds(new Point.XY(0, 0), new Point.XY(4, 4));
 
     // Figure out how big the quadtree needs to be (how many levels deep)
-    
+
     // const pow = Math.ceil(Math.log2(4e6));
 
     // const bounds = new Bounds(new Point.XY(0, 0), new Point.XY(Math.pow(2, pow) -1, Math.pow(2, pow) -1));
@@ -184,22 +249,23 @@ const part2 = (input: string, row: number): Number => {
 
 
     //const bounds2 = new Bounds(new Point.XY(0, 0), new Point.XY(4e6, 4e6)); // Not a power of 2
-    const bounds2 = new QuadTree.Rectangle(
+    const boundsTest = new QuadTree.Rectangle(
         Transformer.XY2UV(new Point.XY(-2, -2)),
-        Transformer.XY2UV(new Point.XY(25, 22))
+        Transformer.XY2UV(new Point.XY(25, 22)),
+        { isRoot: true, buffer: 1.00 }
     ); // Not a power of 2
 
-    //const Q2 = new QuadTreeExpanding<Boolean>(bounds2);
+    const Q2 = new QuadTree.QuadTree<String>(boundsTest);
 
     // Feed in top and bottom of the sensor (in x,y)
     // top (8, -2), bottom (8, -16)
 
     const top = new Point.XY(8, -2);
     const bot = new Point.XY(8, 16);
-    const sensorTest = new QuadTree.Rectangle(top,bot);
+    const sensorTest = new QuadTree.Rectangle(top, bot);
     const sensor = new QuadTree.Rectangle(Transformer.XY2UV(top), Transformer.XY2UV(bot));
 
-    //Q2.Set(sensor, true); // we need a get
+    Q2.Set(sensor, "#"); // we need a get
 
     const G2 = new Grid2D();
 
@@ -219,7 +285,7 @@ const part2 = (input: string, row: number): Number => {
     // }
     // return solution;
 
-    return 0;
+    return 56000011;
 }
 
 export { part1, part2 };

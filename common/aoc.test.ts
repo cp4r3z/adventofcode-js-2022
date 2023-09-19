@@ -183,7 +183,25 @@ describe('Common Tests: QuadTree', () => {
         qtLarge.Set(dataBounds, "TEST");
         const test = qtLarge.Get(new Shape.Rectangle(new Point.XY(0, 0), new Point.XY(0, 0)));
         expect(test).toBe("TEST");
-        const outside = qtLarge.Get(new Shape.Rectangle(new Point.XY(0, 0), new Point.XY(1e4, 0)));
+        const outside = qtLarge.Get(new Shape.Rectangle(new Point.XY(1e4, 0), new Point.XY(1e4, 0)));
         expect(outside).toBeNull();
+        const outsidex0y0 = qtLarge.Get(new Shape.Rectangle(new Point.XY(-1e3 - 1, -1e3 - 1), new Point.XY(-1e3 - 1, -1e3 - 1)));
+        expect(outsidex0y0).toBeNull();
+        const outsidex1y1 = qtLarge.Get(new Shape.Rectangle(new Point.XY(1e3 + 1, 1e3 + 1), new Point.XY(1e3 + 1, 1e3 + 1)));
+        expect(outsidex1y1).toBeNull();
+    });
+
+    /**
+     * After we fill an entire quad, it should "collapse" into it's parent  
+     */
+    it('QuadTree Set - Fill Quad with Same', async () => {
+        const b = new QuadTree.Rectangle(new Point.XY(0, 0), new Point.XY(3, 3), { isRoot: true });
+        const qt = new QuadTree.QuadTree<String>(b);
+        const dataBounds1 = new Shape.Rectangle(new Point.XY(0, 0), new Point.XY(1, 3));
+        qt.Set(dataBounds1, "TEST");
+        const dataBounds2 = new Shape.Rectangle(new Point.XY(2, 0), new Point.XY(3, 3));
+        qt.Set(dataBounds2, "TEST");
+        const test = qt.Get(new Shape.Rectangle(r2x2.x0y0, r2x2.x0y0));
+        expect(test).toBe("TEST");
     });
 });
