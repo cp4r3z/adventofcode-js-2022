@@ -12,7 +12,7 @@ describe('Day 15', () => {
         console.log(solution);
     });
 
-    xit('Part 2', async () => {
+    it('Part 2', async () => {
         const solution = part2(tinput);        
         expect(solution).toBe(56000011);
     });

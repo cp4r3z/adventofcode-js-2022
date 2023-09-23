@@ -200,30 +200,95 @@ const FindGridBounds = (sensors: Sensor[]) => {
 // I think we extend QuadTree to accept a Transformer... or include the transformer.
 
 const part2 = (input: string, row: number): Number => {
+
+
+    const rectt01 = new QuadTree.Rectangle(
+        new Point.XY(-2,-2),
+        new Point.XY(25,22), { isRoot: true });
+    const qt01 = new QuadTree.QuadTree<string>(rectt01);
+
+    const rectdata01 = new Shape.Rectangle(
+        new Point.XY(-1,-1),
+        new Point.XY(24,21));
+
+    qt01.Set(rectdata01,"#");
+
+    const rectdata02 = new Shape.Rectangle(
+        new Point.XY(0,0),
+        new Point.XY(23,17));
+
+    qt01.Set(rectdata02,".");
+
+const gridtest01 = new Grid2D();
+    //gridBounds.
+
+    for (let X = rectt01.minX; X < rectt01.maxX; X++) {
+        for (let Y = rectt01.minY; Y < rectt01.maxY; Y++) {
+            //const uv = Transformer.XY2UV(new Point.XY(X, Y));
+            let v = qt01.Get(new Shape.Rectangle(new Point.XY(X,Y)));
+            if (!v) v = ' ';
+            gridtest01.set({ x: X, y: Y }, v);
+        }
+    }
+
+    gridtest01.print(true);
+
+
     const sensors = parse(input);
     const gridBounds: Shape.Rectangle = FindGridBounds(sensors);
-    const gridBoundsTweak = new Shape.Rectangle(
-        new Point.XY(gridBounds.x0y0.x,gridBounds.x0y0.y-gridBounds.deltaY()),
-        new Point.XY(gridBounds.x1y1.x,gridBounds.x1y1.y+gridBounds.deltaY()))
+    const gridBoundsTweak = new QuadTree.Rectangle(
+        new Point.XY(gridBounds.x0y0.x, gridBounds.x0y0.y - gridBounds.deltaY()),
+        new Point.XY(gridBounds.x1y1.x, gridBounds.x1y1.y + gridBounds.deltaY()), { isRoot: true });
     const gridBoundsTrans = Transformer.XY2UVRect(gridBoundsTweak);
     const boundsTrans = new QuadTree.Rectangle(
         gridBoundsTrans.x0y0, gridBoundsTrans.x1y1,
         { isRoot: true, buffer: 2.00 } // Buffer of 200%
     );
 
-    const QT = new QuadTree.QuadTree<String>(boundsTrans);
+    const QT = new QuadTree.QuadTree<string>(boundsTrans);
+
+    // RESTORE!
+    for (const sensor of sensors) {
+        if (sensor.x !== 8) continue;
+        const rangex0y0 = new Point.XY(sensor.x, sensor.y - sensor.range);
+        const rangex1y1 = new Point.XY(sensor.x, sensor.y + sensor.range);
+        const rangeTrans = Transformer.XY2UVRect(new Shape.Rectangle(rangex0y0, rangex1y1));
+        QT.Set(rangeTrans, '#');
+    }
 
     for (const sensor of sensors) {
-        const rangex0y0 = new Point.XY(sensor.x, sensor.y + sensor.range);
-        const rangex1y1 = new Point.XY(sensor.x, sensor.y - sensor.range);
-        const rangeTrans = Transformer.XY2UVRect(new Shape.Rectangle(rangex0y0, rangex1y1));
-        QT.Set(rangeTrans,'#');
+
+        QT.Set(Transformer.XY2UVRect(new Shape.Rectangle(sensor)), 'S');
+        QT.Set(Transformer.XY2UVRect(new Shape.Rectangle(sensor.beacon)), 'B');
     }
-    for (const sensor of sensors){
-        
-        QT.Set(Transformer.XY2UVRect(new Shape.Rectangle(sensor,sensor)),'S');
-        QT.Set(Transformer.XY2UVRect(new Shape.Rectangle(sensor.beacon,sensor.beacon)),'B');
+
+
+    const gridtest = new Grid2D();
+    //gridBounds.
+
+    for (let X = gridBounds.minX; X < gridBounds.maxX; X++) {
+        for (let Y = gridBounds.minY; Y < gridBounds.maxY; Y++) {
+            const uv = Transformer.XY2UV(new Point.XY(X, Y));
+            let uvval = QT.Get(new Shape.Rectangle(uv));
+            if (!uvval) uvval = ' ';
+            gridtest.set({ x: X, y: Y }, uvval);
+        }
     }
+
+    gridtest.print(true);
+
+
+    const beaconknown = Transformer.XY2UV(new Point.XY(14, 11));
+    const testknown = QT.Get(new Shape.Rectangle(beaconknown));
+
+    const beaconknown2 = Transformer.XY2UV(new Point.XY(13, 11));
+    const testknown2 = QT.Get(new Shape.Rectangle(beaconknown2));
+    const beaconknown3 = Transformer.XY2UV(new Point.XY(15, 11));
+    const testknown3 = QT.Get(new Shape.Rectangle(beaconknown3));
+    const beaconknown4 = Transformer.XY2UV(new Point.XY(14, 10));
+    const testknown4 = QT.Get(new Shape.Rectangle(beaconknown4));
+    const beaconknown5 = Transformer.XY2UV(new Point.XY(14, 12));
+    const testknown5 = QT.Get(new Shape.Rectangle(beaconknown5));
 
     // Yeah, honestly this is sounding more and more like I should have used a quadtree :-(
 

@@ -21,7 +21,14 @@ export class Rectangle {
     private _x0y0: Point.XY;
     private _x1y1: Point.XY;
 
-    constructor(x0y0: Point.IPoint2D, x1y1: Point.IPoint2D) {
+    constructor(x0y0: Point.IPoint2D, x1y1?: Point.IPoint2D) {
+        if (x0y0 && !x1y1) {
+            // Point
+            this._x0y0 = x0y0.copy();
+            this._x1y1 = x0y0.copy();
+            return;
+        }
+
         if (x0y0.x > x1y1.x || x0y0.y > x1y1.y) {
             // Try to reverse it
             if (x0y0.x >= x1y1.x && x0y0.y >= x1y1.y) {
@@ -54,7 +61,7 @@ export class Rectangle {
 
     deltaX = (asGrid?: boolean): number => this.maxX - this.minX + (asGrid ? 1 : 0);
     deltaY = (asGrid?: boolean): number => this.maxY - this.minY + (asGrid ? 1 : 0);
-    
+
     /**
      * TODO: This is the area of the rectangle, NOT the active area
      * @param asGrid Counts vertices as units
@@ -79,7 +86,7 @@ export class Rectangle {
     move = (delta: Point.XY) => {
         this._x0y0.move(delta);
         this._x1y1.move(delta);
-    }    
+    }
 
     //TODO: Unit test this guy
     intersects = (other: Rectangle): boolean => {
