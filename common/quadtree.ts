@@ -258,8 +258,11 @@ export class QuadTree<T> {
         };
 
         for (const [key, quad] of Object.entries(this.quads)) {
-            quad.SetActive(this.bounds, this.active);
+            quad.data = this.data;
+            //TODO
+            //quad.SetActive(this.bounds, this.active);
         }
+        this.data = null;
 
         return true;
     }
@@ -290,6 +293,10 @@ export class QuadTree<T> {
      */
     Set = (bounds: Rectangle, data: T) => {
 
+        if (this.data === data) {
+            return;
+        }
+
         // Is this quadtree completely within the bounds
 
         if (bounds.contains(this.bounds)) {
@@ -315,11 +322,8 @@ export class QuadTree<T> {
 
             // this.active = ActiveState.VARIOUS;
 
-            if (this.data === data) {
-                return;
-            }
-
-            this.data = null;
+           
+            
 
             if (!this.hasChildren) {
                 const wasSplit = this.split();
@@ -328,10 +332,14 @@ export class QuadTree<T> {
                 }
             }
 
+            
+
             for (const [key, quad] of Object.entries(this.quads)) {
                 //console.log(`${key}: ${value}`);
                 quad.Set(bounds, data);
             }
+
+            //this.data = null;
 
             // If all children have the same value, set data and remove children
 
@@ -352,6 +360,8 @@ export class QuadTree<T> {
                 this.data = quadData;
                 this.quads = null;
             }
+
+            
         }
     }
 
