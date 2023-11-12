@@ -1,4 +1,4 @@
-import { Grid2D, Coor2D } from '../common/grid';
+import { Grid2D, Coor2D } from '../common/grid.1';
 import * as Point from '../common/base/points';
 import * as Shape from '../common/base/shapes';
 

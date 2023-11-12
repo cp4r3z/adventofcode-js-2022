@@ -1,4 +1,4 @@
-import { Grid2D, Coor2D } from '../common/grid';
+import { Grid2D, Coor2D } from '../common/grid.1';
 
 class Sand extends Coor2D {
     constructor(x: number, y: number) {
