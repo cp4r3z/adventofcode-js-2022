@@ -54,7 +54,7 @@ export class Rectangle {
 
     deltaX = (asGrid?: boolean): number => this.maxX - this.minX + (asGrid ? 1 : 0);
     deltaY = (asGrid?: boolean): number => this.maxY - this.minY + (asGrid ? 1 : 0);
-    
+
     /**
      * TODO: This is the area of the rectangle, NOT the active area
      * @param asGrid Counts vertices as units
@@ -79,7 +79,7 @@ export class Rectangle {
     move = (delta: Point.XY) => {
         this._x0y0.move(delta);
         this._x1y1.move(delta);
-    }    
+    }
 
     //TODO: Unit test this guy
     intersects = (other: Rectangle): boolean => {
@@ -138,3 +138,64 @@ export class Rectangle {
     }
 
 };
+
+/**
+ * ```
+ * x0y0: Min Corner
+ * x1y1: Max Corner
+ * ```
+ */
+export class RectangularPrism {
+    protected _x0y0z0: Point.XYZ;
+    protected _x1y1z1: Point.XYZ;
+
+    constructor(x0y0z0: Point.IPoint3D, x1y1z1: Point.IPoint3D) {
+        const valid =
+            x0y0z0.x <= x1y1z1.x &&
+            x0y0z0.y <= x1y1z1.y &&
+            x0y0z0.z <= x1y1z1.z;
+
+        if (!valid) {
+            throw new Error("Invalid Rectangular Prism");
+        }
+
+        this._x0y0z0 = x0y0z0.copy();
+        this._x1y1z1 = x1y1z1.copy();
+    }
+
+    public get MinCorner() { return this._x0y0z0; }
+    public get MaxCorner() { return this._x1y1z1; }
+
+    ContainsPoint = (point: Point.IPoint3D): boolean => {
+        return (
+            point.x >= this._x0y0z0.x && point.x <= this._x1y1z1.x &&
+            point.y >= this._x0y0z0.y && point.y <= this._x1y1z1.y &&
+            point.z >= this._x0y0z0.z && point.z <= this._x1y1z1.z
+        );
+    }
+}
+
+export class RectangularPrismBounds extends RectangularPrism {
+    Expand(point: Point.IPoint3D) {
+        if (point.x < this._x0y0z0.x) {
+            this._x0y0z0 = new Point.XYZ(point.x, this._x0y0z0.y, this._x0y0z0.z);
+        }
+        else if (point.x > this._x1y1z1.x) {
+            this._x1y1z1 = new Point.XYZ(point.x, this._x1y1z1.y, this._x1y1z1.z);
+        }
+
+        if (point.y < this._x0y0z0.y) {
+            this._x0y0z0 = new Point.XYZ(this._x0y0z0.x, point.y, this._x0y0z0.z);
+        }
+        else if (point.y > this._x1y1z1.y) {
+            this._x1y1z1 = new Point.XYZ(this._x1y1z1.x, point.y, this._x1y1z1.z);
+        }
+
+        if (point.z < this._x0y0z0.z) {
+            this._x0y0z0 = new Point.XYZ(this._x0y0z0.x, this._x0y0z0.y, point.z);
+        }
+        else if (point.z > this._x1y1z1.z) {
+            this._x1y1z1 = new Point.XYZ(this._x1y1z1.x, this._x1y1z1.y, point.z);
+        }
+    }
+}

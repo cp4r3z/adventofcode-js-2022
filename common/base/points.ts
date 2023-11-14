@@ -1,7 +1,7 @@
-interface IPointFunctions { copy: Function, move: Function };
-export interface IPoint1D extends IPointFunctions { x: number };
-export interface IPoint2D extends IPointFunctions { x: number, y: number };
-export interface IPoint3D extends IPointFunctions { x: number, y: number, z: number };
+export interface IPoint { copy: Function, move: Function };
+export interface IPoint1D extends IPoint { x: number };
+export interface IPoint2D extends IPoint { x: number, y: number };
+export interface IPoint3D extends IPoint { x: number, y: number, z: number };
 
 export class X implements IPoint1D {
     x: number;
@@ -35,6 +35,31 @@ export class XY implements IPoint2D {
     }
 }
 
+export class XYZ implements IPoint3D {
+    x: number;
+    y: number;
+    z: number;
+
+    constructor(x?: number, y?: number, z?: number) {
+        this.x = x || 0;
+        this.y = y || 0;
+        this.z = z || 0;
+    }
+
+    copy = () => new XYZ(this.x, this.y, this.z);
+
+    /**
+     * AKA "Add"
+     */
+    move = (delta: XYZ): XYZ => {
+        this.x += delta.x;
+        this.y += delta.y;
+        this.z += delta.z;
+        return this;
+    }
+}
+
+// Interesting... what were we trying to do here?
 class Point2DMap extends Map {
     constructor(x?: number, y?: number) {
         super();
