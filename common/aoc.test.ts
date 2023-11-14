@@ -178,17 +178,34 @@ describe('Common Tests: QuadTree', () => {
 
     it('QuadTree Set/Get Large', async () => {
         const bLarge = new QuadTree.Rectangle(new Point.XY(-1e6, -1e6), new Point.XY(1e6, 1e6), { isRoot: true });
-        const qtLarge = new QuadTree.QuadTree<String>(bLarge);
+        const qtLarge = new QuadTree.QuadTree<string>(bLarge);
         const dataBounds = new Shape.Rectangle(new Point.XY(-1e3, -1e3), new Point.XY(1e3, 1e3));
         qtLarge.Set(dataBounds, "TEST");
-        const test = qtLarge.Get(new Shape.Rectangle(new Point.XY(0, 0), new Point.XY(0, 0)));
+        const test = qtLarge.Get(new Shape.Rectangle(new Point.XY(0, 0)));
         expect(test).toBe("TEST");
-        const outside = qtLarge.Get(new Shape.Rectangle(new Point.XY(1e4, 0), new Point.XY(1e4, 0)));
+        const outside = qtLarge.Get(new Shape.Rectangle(new Point.XY(1e4, 0)));
         expect(outside).toBeNull();
-        const outsidex0y0 = qtLarge.Get(new Shape.Rectangle(new Point.XY(-1e3 - 1, -1e3 - 1), new Point.XY(-1e3 - 1, -1e3 - 1)));
+        const outsidex0y0 = qtLarge.Get(new Shape.Rectangle(new Point.XY(-1e3 - 1)));
         expect(outsidex0y0).toBeNull();
-        const outsidex1y1 = qtLarge.Get(new Shape.Rectangle(new Point.XY(1e3 + 1, 1e3 + 1), new Point.XY(1e3 + 1, 1e3 + 1)));
+        const outsidex1y1 = qtLarge.Get(new Shape.Rectangle(new Point.XY(1e3 + 1)));
         expect(outsidex1y1).toBeNull();
+    });
+
+    it('QuadTree Set/Get Large 2', async () => {
+        const prime = 39916801; // This causes memory to blow
+        const smallprime = 65537;
+        const bLarge = new QuadTree.Rectangle(new Point.XY(0, 0), new Point.XY(smallprime, smallprime), { isRoot: true,buffer:.25 });
+        const qtLarge = new QuadTree.QuadTree<string>(bLarge);
+        const dataBounds = new Shape.Rectangle(new Point.XY(1, 1), new Point.XY(smallprime, smallprime));
+        qtLarge.Set(dataBounds, "TEST");
+        // const test = qtLarge.Get(new Shape.Rectangle(new Point.XY(0, 0)));
+        // expect(test).toBe("TEST");
+        // const outside = qtLarge.Get(new Shape.Rectangle(new Point.XY(1e4, 0)));
+        // expect(outside).toBeNull();
+        // const outsidex0y0 = qtLarge.Get(new Shape.Rectangle(new Point.XY(-1e3 - 1)));
+        // expect(outsidex0y0).toBeNull();
+        // const outsidex1y1 = qtLarge.Get(new Shape.Rectangle(new Point.XY(1e3 + 1)));
+        // expect(outsidex1y1).toBeNull();
     });
 
     /**

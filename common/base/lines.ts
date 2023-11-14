@@ -1,5 +1,50 @@
-//import { Point.XY } from "./points";
 import * as Point from "./points"
+
+export class Line2D {
+
+    // TODO: Maybe take an optional parameter to specify infinite lines?
+    public static Intersects = (L0: Line2D, L1: Line2D): Point.IPoint2D | null => {
+
+        // Line L0 represented as a1x + b1y = c1
+        const a1 = L0._p1.y - L0._p0.y;
+        const b1 = L0._p0.x - L0._p1.x;
+        const c1 = a1 * (L0._p0.x) + b1 * (L0._p0.y);
+
+        // Line L1 represented as a2x + b2y = c2
+        const a2 = L1._p1.y - L1._p0.y;
+        const b2 = L0._p0.x - L1._p1.x;
+        const c2 = a2 * (L1._p0.x) + b2 * (L1._p0.y);
+
+        const determinant = a1 * b2 - a2 * b1;
+
+        if (determinant == 0) {
+            return null;
+        }
+
+        const x = (b2 * c1 - b1 * c2) / determinant;
+        const y = (a1 * c2 - a2 * c1) / determinant;
+        return new Point.XY(x, y);
+    }
+
+
+     _p0: Point.XY;
+     _p1: Point.XY;
+
+    // Order doesn't matter
+    constructor(p0: Point.IPoint2D, p1?: Point.IPoint2D) {
+        if (p0 && !p1) {
+            // Point
+            this._p0 = p0.copy();
+            this._p1 = p0.copy();
+            return;
+        }
+        this._p0 = p0.copy();
+        this._p1 = p1.copy();
+    }
+
+    toString = () => `(${this._p0.x},${this._p0.y})->(${this._p1.x},${this._p1.y})`;
+}
+
 
 /**
  * ```
@@ -145,64 +190,3 @@ export class Rectangle {
     }
 
 };
-
-/**
- * ```
- * x0y0: Min Corner
- * x1y1: Max Corner
- * ```
- */
-export class RectangularPrism {
-    protected _x0y0z0: Point.XYZ;
-    protected _x1y1z1: Point.XYZ;
-
-    constructor(x0y0z0: Point.IPoint3D, x1y1z1: Point.IPoint3D) {
-        const valid =
-            x0y0z0.x <= x1y1z1.x &&
-            x0y0z0.y <= x1y1z1.y &&
-            x0y0z0.z <= x1y1z1.z;
-
-        if (!valid) {
-            throw new Error("Invalid Rectangular Prism");
-        }
-
-        this._x0y0z0 = x0y0z0.copy();
-        this._x1y1z1 = x1y1z1.copy();
-    }
-
-    public get MinCorner() { return this._x0y0z0; }
-    public get MaxCorner() { return this._x1y1z1; }
-
-    ContainsPoint = (point: Point.IPoint3D): boolean => {
-        return (
-            point.x >= this._x0y0z0.x && point.x <= this._x1y1z1.x &&
-            point.y >= this._x0y0z0.y && point.y <= this._x1y1z1.y &&
-            point.z >= this._x0y0z0.z && point.z <= this._x1y1z1.z
-        );
-    }
-}
-
-export class RectangularPrismBounds extends RectangularPrism {
-    Expand(point: Point.IPoint3D) {
-        if (point.x < this._x0y0z0.x) {
-            this._x0y0z0 = new Point.XYZ(point.x, this._x0y0z0.y, this._x0y0z0.z);
-        }
-        else if (point.x > this._x1y1z1.x) {
-            this._x1y1z1 = new Point.XYZ(point.x, this._x1y1z1.y, this._x1y1z1.z);
-        }
-
-        if (point.y < this._x0y0z0.y) {
-            this._x0y0z0 = new Point.XYZ(this._x0y0z0.x, point.y, this._x0y0z0.z);
-        }
-        else if (point.y > this._x1y1z1.y) {
-            this._x1y1z1 = new Point.XYZ(this._x1y1z1.x, point.y, this._x1y1z1.z);
-        }
-
-        if (point.z < this._x0y0z0.z) {
-            this._x0y0z0 = new Point.XYZ(this._x0y0z0.x, this._x0y0z0.y, point.z);
-        }
-        else if (point.z > this._x1y1z1.z) {
-            this._x1y1z1 = new Point.XYZ(this._x1y1z1.x, this._x1y1z1.y, point.z);
-        }
-    }
-}

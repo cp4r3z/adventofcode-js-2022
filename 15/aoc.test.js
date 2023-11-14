@@ -19,6 +19,6 @@ describe('Day 15', () => {
 
     xit('Part 2 (Real Input)', async () => {
         const solution = part2(input);
-        console.log(solution);
+        console.log(solution);       
     });
 });

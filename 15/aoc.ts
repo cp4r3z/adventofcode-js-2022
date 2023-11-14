@@ -1,8 +1,6 @@
 import { Grid2D, Coor2D } from '../common/grid.1';
 import * as Point from '../common/base/points';
-import * as Shape from '../common/base/shapes';
-
-import * as QuadTree from '../common/quadtree';
+import { Line2D } from '../common/base/lines';
 
 class Beacon extends Point.XY {
     //readonly sensor // not really necessary, but we could create a back-link to the sensor
@@ -13,7 +11,6 @@ class Sensor extends Point.XY {
     readonly range: number;
 
     /**
-     * 
      * @param s Line from Input
      */
     constructor(s: string) {
@@ -133,159 +130,98 @@ const part1 = (input: string, row: number): Number => {
     return solution;
 }
 
-/**
- * More than meets the eye
- */
-class Transformer {
-
-    /**
-     * @returns uv
-     */
-    static XY2UV = (xy: Point.XY): Point.XY => {
-        const u = xy.x + xy.y;
-        const v = xy.y - xy.x;
-        return new Point.XY(u, v);
-    }
-
-    /**
-     * @returns uv rect
-     */
-    static XY2UVRect = (xy: Shape.Rectangle): Shape.Rectangle => {
-        const u0v0 = Transformer.XY2UV(xy.x0y0);
-        const u1v1 = Transformer.XY2UV(xy.x1y1);
-        return new Shape.Rectangle(u0v0, u1v1);
-    }
-
-    /**
-     * @returns xy
-     */
-    static UV2XY = (uv: Point.XY): Point.XY => {
-        const u = uv.x;
-        const v = uv.y;
-        const y = (u + v) / 2; // This should ALWAYS be an int. Check?
-        const x = u - y;
-        return new Point.XY(x, y);
-    }
-
-    /**
-     * @returns xy rect
-     */
-    static UV2XYRect = (uv: Shape.Rectangle): Shape.Rectangle => {
-        const x0y0 = Transformer.UV2XY(uv.x0y0);
-        const x1y1 = Transformer.UV2XY(uv.x1y1);
-        return new Shape.Rectangle(x0y0, x1y1);
-    }
-}
-
-const FindGridBounds = (sensors: Sensor[]) => {
-    let x0 = sensors[0].x;
-    let x1 = sensors[0].x;
-    let y0 = sensors[0].y;
-    let y1 = sensors[0].y;
-
+const checkPoint = (point: Point.IPoint2D, sensors: Sensor[]) => {
     for (const sensor of sensors) {
-        if (sensor.x < x0) x0 = sensor.x;
-        if (sensor.beacon.x < x0) x0 = sensor.beacon.x;
-        if (sensor.x > x1) x1 = sensor.x;
-        if (sensor.beacon.x > x1) x1 = sensor.beacon.x;
-        if (sensor.y < y0) y0 = sensor.y;
-        if (sensor.beacon.y < y0) y0 = sensor.beacon.y;
-        if (sensor.y > y1) y1 = sensor.y;
-        if (sensor.beacon.y > y1) y1 = sensor.beacon.y;
+        //const range = sensor.range;
+        const distance = Math.abs(sensor.x - point.x) + Math.abs(sensor.y - point.y);
+        if (distance <= sensor.range) {
+            return false;
+        }
     }
 
-    return new Shape.Rectangle(new Point.XY(x0, y0), new Point.XY(x1, y1));
+    return true;
 }
-
-// I think we extend QuadTree to accept a Transformer... or include the transformer.
 
 const part2 = (input: string, row: number): Number => {
     const sensors = parse(input);
-    const gridBounds: Shape.Rectangle = FindGridBounds(sensors);
-    const gridBoundsTweak = new Shape.Rectangle(
-        new Point.XY(gridBounds.x0y0.x,gridBounds.x0y0.y-gridBounds.deltaY()),
-        new Point.XY(gridBounds.x1y1.x,gridBounds.x1y1.y+gridBounds.deltaY()))
-    const gridBoundsTrans = Transformer.XY2UVRect(gridBoundsTweak);
-    const boundsTrans = new QuadTree.Rectangle(
-        gridBoundsTrans.x0y0, gridBoundsTrans.x1y1,
-        { isRoot: true, buffer: 2.00 } // Buffer of 200%
-    );
 
-    const QT = new QuadTree.QuadTree<String>(boundsTrans);
+    const lines: Line2D[] = [];
 
-    for (const sensor of sensors) {
-        const rangex0y0 = new Point.XY(sensor.x, sensor.y + sensor.range);
-        const rangex1y1 = new Point.XY(sensor.x, sensor.y - sensor.range);
-        const rangeTrans = Transformer.XY2UVRect(new Shape.Rectangle(rangex0y0, rangex1y1));
-        QT.Set(rangeTrans,'#');
+    for (let i = 0; i < sensors.length - 1; i++) {
+        const sensorI = sensors[i];
+        for (let j = i + 1; j < sensors.length; j++) {
+            const sensorJ = sensors[j];
+
+            // Find sensors that have a gap 2 apart
+            const ranges = sensorI.range + sensorJ.range;
+            const distance = new Point.XY(Math.abs(sensorI.x - sensorJ.x), Math.abs(sensorI.y - sensorJ.y));
+
+            const gap = distance.x + distance.y - ranges;
+
+            if (gap === 2) {
+                //console.log(`Comparing ${sensorI.x},${sensorI.y} to ${sensorJ.x},${sensorJ.y}: ${gap}`);
+
+                // Find limiting dimension
+                const limiting = distance.x < distance.y ? 'x' : 'y';
+                const nonlimiting = distance.x > distance.y ? 'x' : 'y';
+
+                // Get direction
+                const dx = sensorI.x < sensorJ.x ? 1 : -1;
+                const dy = sensorI.y < sensorJ.y ? 1 : -1;
+                const v = new Point.XY(dx, dy);
+
+                // So, the limiting dimension gets full range...
+
+                let p0;
+                let p1;
+                if (limiting === 'x') {
+                    p0 = new Point.XY(sensorI.x, sensorI.y + (sensorI.range + 1) * v.y);
+                    p1 = new Point.XY(sensorJ.x, sensorJ.y - (sensorJ.range + 1) * v.y);
+                } else {
+                    p0 = new Point.XY(sensorI.x + (sensorI.range + 1) * v.x, sensorI.y);
+                    p1 = new Point.XY(sensorJ.x - (sensorJ.range + 1) * v.x, sensorJ.y);
+                }
+
+                // console.log(`p0: ${p0.x},${p0.y}`);
+                // console.log(`p1: ${p1.x},${p1.y}`);
+
+                const line = new Line2D(p0, p1);
+                lines.push(line);
+            }
+        }
     }
-    for (const sensor of sensors){
-        
-        QT.Set(Transformer.XY2UVRect(new Shape.Rectangle(sensor,sensor)),'S');
-        QT.Set(Transformer.XY2UVRect(new Shape.Rectangle(sensor.beacon,sensor.beacon)),'B');
+
+    for (let i = 0; i < lines.length - 1; i++) {
+        const lineI = lines[i];
+        for (let j = i + 1; j < lines.length; j++) {
+            const lineJ = lines[j];
+            const intersection: Point.IPoint2D = Line2D.Intersects(lineI, lineJ);
+            //console.log(`${lineI.toString()}-->${lineJ.toString()} @ ${intersection.x},${intersection.y}`);
+        }
     }
 
-    // Yeah, honestly this is sounding more and more like I should have used a quadtree :-(
+    let pointsChecked = 0;
+    for (let i = 0; i < lines.length - 1; i++) {
+        const lineI = lines[i];
+        const dx = lineI._p0.x < lineI._p1.x ? 1 : -1;
+        const dy = lineI._p0.y < lineI._p1.y ? 1 : -1;
+        const v = new Point.XY(dx, dy);
 
-    //const bounds = new Bounds(new Point.XY(0, 0), new Point.XY(4, 4));
+        let jy = lineI._p0.y;
+        for (let jx = lineI._p0.x; jx !== lineI._p1.x; jx += v.x) {
 
-    // Figure out how big the quadtree needs to be (how many levels deep)
+            const jPoint = new Point.XY(jx, jy);
 
-    // const pow = Math.ceil(Math.log2(4e6));
+            pointsChecked++;
+            if (checkPoint(jPoint, sensors)) {
+                return jPoint.x * 4e6 + jPoint.y;
+            }
 
-    // const bounds = new Bounds(new Point.XY(0, 0), new Point.XY(Math.pow(2, pow) -1, Math.pow(2, pow) -1));
+            jy += v.y;
+        }
+    }
 
-    // const Q = new QuadTree<Boolean>(bounds);
-
-    // Q.Set(new Bounds(new Point.XY(0, 0), new Point.XY(0, 3)), true);
-
-    // const test1 = Q.Get(new Point.XY(0,1));
-    // const test2 = Q.Get(new Point.XY(1,1));
-
-    const bounds1 = new QuadTree.Rectangle(new Point.XY(0, 0), new Point.XY(3, 3));
-    const bounds3 = new QuadTree.Rectangle(new Point.XY(0, 0), new Point.XY(3, 5));
-    const Q1 = new QuadTree.QuadTree<Boolean>(bounds1);
-    Q1.Set(new QuadTree.Rectangle(new Point.XY(0, 0), new Point.XY(0, 2)), true); // should be 3 places
-
-
-    //const bounds2 = new Bounds(new Point.XY(0, 0), new Point.XY(4e6, 4e6)); // Not a power of 2
-    const boundsTest = new QuadTree.Rectangle(
-        Transformer.XY2UV(new Point.XY(-2, -2)),
-        Transformer.XY2UV(new Point.XY(25, 22)),
-        { isRoot: true, buffer: 1.00 }
-    ); // Not a power of 2
-
-    const Q2 = new QuadTree.QuadTree<String>(boundsTest);
-
-    // Feed in top and bottom of the sensor (in x,y)
-    // top (8, -2), bottom (8, -16)
-
-    const top = new Point.XY(8, -2);
-    const bot = new Point.XY(8, 16);
-    const sensorTest = new QuadTree.Rectangle(top, bot);
-    const sensor = new QuadTree.Rectangle(Transformer.XY2UV(top), Transformer.XY2UV(bot));
-
-    Q2.Set(sensor, "#"); // we need a get
-
-    const G2 = new Grid2D();
-
-
-    // It would seem that quadtree nodes are single points. We want "ranges"
-
-    // const sensors = parse(input);
-    // const grid = new Grid15(row);
-    // grid.addSensors(sensors);
-    // //grid.print(true); // Don't do this for the real input!
-    // let solution = 0;
-    // for (let index = 0; index < 4e6; index++) {
-    //     if (index%1e4===0){
-    //         console.log(index);
-    //     }
-    //     solution = grid.calculateCoverage();   
-    // }
-    // return solution;
-
-    return 56000011;
+    return 0; // We should not get here;
 }
 
 export { part1, part2 };
