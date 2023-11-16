@@ -7,7 +7,7 @@ describe('Day 19', () => {
         expect(solution).toBe(3);
     });
 
-    xit('Part 1 (Real Input)', async () => {
+    it('Part 1 (Real Input)', async () => {
         const solution = part1(input);
         console.log(solution);
     });
