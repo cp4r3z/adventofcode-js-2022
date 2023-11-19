@@ -1,4 +1,4 @@
-import { part1, part2 } from '../out/20day/aoc';
+import { part1, part2 } from '../out/20/aoc';
 import { input, tinput } from './aoc.input';
 
 describe('Day 20', () => {

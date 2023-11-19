@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "command": "npm test ${fileDirnameBasename}",
+            "command": "npm test /${relativeFileDirname}",
             "name": "npm run test (node-terminal)",
             "request": "launch",
             "type": "node-terminal",
@@ -14,19 +14,19 @@
             ],
             //"preLaunchTask": "tsc: build - tsconfig.json",                      
         },
-        {
-            "name": "npm run test (node)",
-            "type": "node",
-            "request": "launch",
-            "runtimeArgs": [
-                "test",
-                "${fileDirnameBasename}"                
-            ],
-            "runtimeExecutable": "npm",                        
-            "skipFiles": [
-                "<node_internals>/**"
-            ],            
-            //"preLaunchTask": "tsc: build - tsconfig.json",
-        }
+        // {
+        //     "name": "npm run test (node)",
+        //     "type": "node",
+        //     "request": "launch",
+        //     "runtimeArgs": [
+        //         "test",
+        //         "${workspaceFolder}/${relativeFileDirname}"                
+        //     ],
+        //     "runtimeExecutable": "npm",                        
+        //     "skipFiles": [
+        //         "<node_internals>/**"
+        //     ],            
+        //     //"preLaunchTask": "tsc: build - tsconfig.json",
+        // }
     ]
 }
