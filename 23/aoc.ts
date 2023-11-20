@@ -33,7 +33,6 @@ class Elf extends Point.XY {
             // If there is no Elf in the N, NE, or NW adjacent positions, the Elf proposes moving north one step.
             if (moveLetter === 'N' && nn && ne && nw) {
                 this.NextMove = n;
-
             }
             // If there is no Elf in the S, SE, or SW adjacent positions, the Elf proposes moving south one step.
             else if (moveLetter === 'S' && ss && se && sw) {
@@ -92,11 +91,12 @@ const parse = (input: String): { grid: Grid2D, elves: Elf[] } => {
 const part1 = async (input: string): Promise<number | string> => {
     const { grid, elves } = parse(input);
     // for / while...
-    let move = 0;
+    let move = 1;
     let moveSequence = ['N', 'S', 'W', 'E'];
+    console.log(`Initial`);
+    grid.print();
     do {
-        console.log(`Move ${move}`);
-        grid.print();
+        const area = grid.getBounds().area(true); // < this is wrong.
         // grid.forEach()
         const moves = new Map<string, Elf>();
         elves.forEach(elf => {
@@ -118,13 +118,14 @@ const part1 = async (input: string): Promise<number | string> => {
 
         const first = moveSequence.shift();
         moveSequence.push(first);
+        console.log(`Move ${move}`);
+        grid.print();
     } while (++move <= 10);
-
 
     const bounds = grid.getBounds();
     const area = bounds.area(true);
     const emptyArea = area - elves.length;
-    return emptyArea; //4125 too high?
+    return emptyArea;
 }
 
 const part2 = async (input: string): Promise<number | string> => {
