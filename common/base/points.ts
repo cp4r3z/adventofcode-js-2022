@@ -29,9 +29,12 @@ export class XY implements IPoint2D {
     /**
      * AKA "Add"
      */
-    move = (delta: XY) => {
-        this.x += delta.x;
-        this.y += delta.y;
+    move = (delta: XY | null) => {
+        if (delta) {
+            this.x += delta.x;
+            this.y += delta.y;
+        }
+        return this;
     }
 }
 

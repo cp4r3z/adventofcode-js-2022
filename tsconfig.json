@@ -1,16 +1,18 @@
 {
     "compilerOptions": {
-        "module": "ES6",
-        "target": "ES6",
         "rootDir": ".",
         "outDir": "./out",
         "sourceMap": true,
         "skipLibCheck": true,
+        "allowSyntheticDefaultImports": true,
         "lib": [
-            "ES2021"
-        ]
+            "ES2022"
+        ],
+        "module": "ES2022",
+        "moduleResolution": "node",
+        "target": "ES2022"
     },
     "exclude": [
-        "node_modules"     
+        "node_modules"
     ]
 }

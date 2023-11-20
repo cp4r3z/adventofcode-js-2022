@@ -65,7 +65,45 @@ export class Grid2D extends Map<string, any>{
         this.set(hash, value);
     }
 
-    //TODO: Print!
+    getBounds = ()=>this.bounds;
+
+    print = (yDown = true) => {
+        if (yDown) { // TODO: DRY this up
+            for (let y = this.bounds.minY; y <= this.bounds.maxY; y++) {
+                let line = '';
+                for (let x = this.bounds.minX; x <= this.bounds.maxX; x++) {
+                    const key = Grid2D.HashXYToKey(x,y);
+                    let value = this.get(key);
+                    if (typeof (value) === 'undefined') {
+                        value = null;
+                        if (this.options.setOnGet) {
+                            value = this.options.defaultValue;
+                            this.set(key, this.options.defaultValue);
+                        }
+                    }
+                    line += value;
+                }
+                console.log(line);
+            }
+        } else {
+            for (let y = this.bounds.maxY; y >= this.bounds.minY; y--) {
+                let line = '';
+                for (let x = this.bounds.minX; x <= this.bounds.maxX; x++) {
+                    const key = Grid2D.HashXYToKey(x,y);
+                    let value = this.get(key);
+                    if (typeof (value) === 'undefined') {
+                        value = null;
+                        if (this.options.setOnGet) {
+                            value = this.options.defaultValue;
+                            this.set(key, this.options.defaultValue);
+                        }
+                    }
+                    line += value;
+                }
+                console.log(line);
+            }
+        }
+    }
 }
 
 export class Grid3D extends Map<string, any>{
