@@ -93,8 +93,8 @@ const part1 = async (input: string): Promise<number | string> => {
     // for / while...
     let move = 1;
     let moveSequence = ['N', 'S', 'W', 'E'];
-    console.log(`Initial`);
-    grid.print();
+    //console.log(`Initial`);
+    //grid.print();
     do {
         const area = grid.getBounds().area(true); // < this is wrong.
         // grid.forEach()
@@ -118,8 +118,9 @@ const part1 = async (input: string): Promise<number | string> => {
 
         const first = moveSequence.shift();
         moveSequence.push(first);
-        console.log(`Move ${move}`);
-        grid.print();
+        //console.log(`Move ${move}`);
+        //grid.print();
+        // console.log(grid.hash());
     } while (++move <= 10);
 
     const bounds = grid.getBounds();
@@ -129,8 +130,50 @@ const part1 = async (input: string): Promise<number | string> => {
 }
 
 const part2 = async (input: string): Promise<number | string> => {
-    const test = parse(input);
-    return 0;
+    const { grid, elves } = parse(input);
+    // for / while...
+    let move = 1;
+    let moveSequence = ['N', 'S', 'W', 'E'];
+    //   console.log(`Initial`);
+    //   grid.print();
+    let stillDiffusing = true;
+    let hash = '';
+    do {
+        // grid.forEach()
+        const moves = new Map<string, Elf>();
+        elves.forEach(elf => {
+            const nextPoint = elf.FindNextMove(grid, moveSequence);
+            const moveKey = Grid2D.HashPointToKey(nextPoint);
+            if (moves.has(moveKey)) {
+                elf.NextMove = null;
+                // But the other elf can't move either
+                moves.get(moveKey).NextMove = null; // maybe there's a better way
+                return;
+            }
+            moves.set(moveKey, elf);
+        });
+
+        // Now actually perform the moves!
+        elves.forEach(elf => {
+            elf.Move(grid);
+        });
+
+        const first = moveSequence.shift();
+        moveSequence.push(first);
+        //   console.log(`Move ${move}`);
+        //  grid.print();
+        // console.log(grid.hash());
+        const afterhash = grid.hash();
+        if (hash === afterhash) {
+            stillDiffusing = false;
+        }
+        else {
+            hash = afterhash;
+        }
+        ++move;
+    } while (stillDiffusing);
+
+    return move - 1;
 }
 
 export { part1, part2 };

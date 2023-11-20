@@ -65,14 +65,36 @@ export class Grid2D extends Map<string, any>{
         this.set(hash, value);
     }
 
-    getBounds = ()=>this.bounds;
+    getBounds = () => this.bounds;
+
+    hash = () => {
+        // maybe find something smaller?
+        let hash = '';
+        for (let y = this.bounds.minY; y <= this.bounds.maxY; y++) {
+            hash += 'l';
+            //let line = '';
+            for (let x = this.bounds.minX; x <= this.bounds.maxX; x++) {
+                const key = Grid2D.HashXYToKey(x, y);
+                let value = this.get(key);
+                if (typeof (value) === 'undefined') {
+                    value = null;
+                    if (this.options.setOnGet) {
+                        value = this.options.defaultValue;
+                        this.set(key, this.options.defaultValue);
+                    }
+                }
+                hash += value;
+            }
+        }
+        return hash;
+    }
 
     print = (yDown = true) => {
         if (yDown) { // TODO: DRY this up
             for (let y = this.bounds.minY; y <= this.bounds.maxY; y++) {
                 let line = '';
                 for (let x = this.bounds.minX; x <= this.bounds.maxX; x++) {
-                    const key = Grid2D.HashXYToKey(x,y);
+                    const key = Grid2D.HashXYToKey(x, y);
                     let value = this.get(key);
                     if (typeof (value) === 'undefined') {
                         value = null;
@@ -81,15 +103,15 @@ export class Grid2D extends Map<string, any>{
                             this.set(key, this.options.defaultValue);
                         }
                     }
-                    line += value;
+                                        line += value;
                 }
                 console.log(line);
             }
-        } else {
+                    } else {
             for (let y = this.bounds.maxY; y >= this.bounds.minY; y--) {
                 let line = '';
                 for (let x = this.bounds.minX; x <= this.bounds.maxX; x++) {
-                    const key = Grid2D.HashXYToKey(x,y);
+                    const key = Grid2D.HashXYToKey(x, y);
                     let value = this.get(key);
                     if (typeof (value) === 'undefined') {
                         value = null;
