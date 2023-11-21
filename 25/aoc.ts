@@ -27,18 +27,19 @@ class Snafu {
     ToDecimal(): Decimal {
         let d = 0;
         for (let i = 0; i < this._sArray.length; i++) {
-            // const element = array[i];
             const s = this._sArray[i];
-            //const sInt = parseInt(s);
             const sd = this.sToD(s);
             const pow5 = this.pow5(this._sArray.length - 1 - i);
             d += sd * pow5;
         }
-        return new Decimal(d);        
+        return new Decimal(d);
     }
 
-    Print():void{
-        console.log(this._sArray.join(''));
+    Value(): string {
+        return this._sArray.join('');
+    }
+    Print(): void {
+        console.log(this.Value());
     }
 }
 
@@ -84,80 +85,68 @@ class Decimal {
         // TODO: In theory, we can memoize this.
         let highestPossible = 0;
         for (let i = 0; i <= place; i++) {
-            const pow5 = this.pow5(place);
-            highestPossible += 2 * pow5; // 2 is the highest value in the place                        
+            const pow5 = this.pow5(i);
+            highestPossible += (2 * pow5); // 2 is the highest value in the place                        
         }
         return highestPossible;
     }
 
+    Value() {
+        return this._d;
+    }
+
     ToSnafu(): Snafu {
-        const highPlace = this.findHighPlace();        
-        const s: string[] = new Array(highPlace+1);
+        // This is not very readable. Sorry.
+        const highPlace = this.findHighPlace();
+        const s: string[] = new Array(highPlace + 1).fill('X');
         let dRemainder = this._d;
         for (let i = 0; i < highPlace; i++) {
-                        
-            //const element = array[i];
-            const pow5 = this.pow5(highPlace-i);
-           
-            for ( let j=-2; j <= 2; j++) {
-                //const element = array[j];
-                const pow5J = pow5 * j;
+            const pow5 = this.pow5(highPlace - i);
+
+            for (let j = -2; j <= 2; j++) {
+                const pow5J = pow5 * j; // The decimal equivalent value of the symbol (j) in place (i)
                 const diff = dRemainder - pow5J;
 
-                //const difftoHighestPossible = dRemainder - pow5J;
-                if (diff<=this.highestPossible(highPlace-i-1)){
-                    // we're good
+                if (diff <= this.highestPossible(highPlace - i - 1)) {
+                    // At this point the value is correct.
                     dRemainder -= pow5J;
-                   // s[] .push(this.dToS(j-1));
-                   s[i]=this.dToS(j);
+                    s[i] = this.dToS(j);
                     break;
-                }                
-
-                // if (diff < 0) { // NOPE!
-                //     // It's the previous one
-                //     const jPrev = j - 1;
-                //     const sjPrev = this.dToS(jPrev);
-                //     dRemainder -= pow5 * jPrev;
-                //     s.push(sjPrev);
-                //     break;
-                // }
+                }
             }
-            
+
         }
-        s[highPlace]=this.dToS(dRemainder);
+        s[highPlace] = this.dToS(dRemainder); // The final bit...
         return new Snafu(s.join(''));
     }
 
-    Print():void{
-        console.log(this._d);
+    Print(): void {
+        console.log(this.Value());
     }
 }
 
 const parse = (input: String) => {
-    return input
-        .split("\n");
-    // .map(line => line.split(''));
+    return input.split("\n");
 }
 
 const part1 = async (input: string): Promise<number | string> => {
     const split = parse(input);
-
     const snafus = split.map(line => new Snafu(line));
-    snafus.forEach(snafu=>{
-        snafu.Print();
-    })
+    snafus.forEach(snafu => {
+        //snafu.Print();
+    });
+    let total = 0;
     const decimals = snafus.map(s => s.ToDecimal());
-    decimals.forEach(decimal=>{
-        decimal.Print();
-    })
+    decimals.forEach(decimal => {
+        //decimal.Print();
+        total += decimal.Value();
+    });
     const snafusB = decimals.map(d => d.ToSnafu());
-    snafusB.forEach(snafu=>{
-        snafu.Print();
-    })
-
-
-    return 0;
-
+    snafusB.forEach(snafu => {
+        //snafu.Print();
+    });
+    const snafuTotal = new Decimal(total).ToSnafu().Value();
+    return snafuTotal;
 }
 
 const part2 = async (input: string): Promise<number | string> => {
