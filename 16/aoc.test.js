@@ -24,6 +24,7 @@ describe('Day 16', () => {
     });
 
     xit('Part 2 (Real Input)', async () => {
+        // This gives the right answer but takes 10 minutes!
         const solution = await part2(input);
         console.log(solution);
     });

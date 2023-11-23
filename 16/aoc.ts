@@ -2,35 +2,12 @@ class Valve {
 
     public Id: string;
     public Flow: number;
-    public Tunnels: Valve[] = []; // ???
+    public Tunnels: Valve[] = [];
 
     constructor(id: string, flow: number) {
         this.Id = id;
-        this.Flow = flow;
-        //this.Tunnels = []; // Array of other valves? With a distance though... { valve, distance, potential?}
-        // Thought, maybe after adding a tunnel, we re-sort by... value?
-        // Although, the value really depends on how many minutes you have left
-
-        //this.potentials = []; //?? I guess just the distance to the valve and the valve itself... ValveInfo?
+        this.Flow = flow;        
     }
-
-    // Do we need this?
-    TraversePotential(valveMap, previousDistance, firstTunnel = null) {
-        const distance = previousDistance + 1;
-        if (valveMap.get(this).distance <= distance) { return; }
-
-        valveMap.set(this, { distance, firstTunnel });
-        for (const t of this.Tunnels) {
-            const ft = firstTunnel || t;
-            t.TraversePotential(valveMap, distance, ft);
-        }
-    }
-
-    // wait why copy?
-    // Copy():Valve{
-
-
-    // }
 }
 
 // Parse to Valve Array, Do Not Modify the Array after Creation
@@ -66,27 +43,6 @@ const parse = (input: String): Valve[] => {
     }
 
     return scan;
-}
-
-
-// not needed????
-class Actor {
-    public Valve: Valve;
-
-    constructor(valve: Valve) {
-        this.Valve = valve;
-    }
-    // valve
-    // current action? < - maybe an action is simply a pointer to a valve? if no valve, open if that makes sense
-    // next action?
-
-    // copy
-    Copy(): Actor {
-        const copy = new Actor(this.Valve);
-
-        return copy;
-    }
-
 }
 
 class State {
@@ -194,30 +150,6 @@ class State {
 
         return ideal;
     }
-
-    // This will always calculate the next steps for the first Actor
-    CalculateNextStates(data: ActionData): State[] {
-        const nextStates: State[] = [];
-        const valve0 = this.Actors[0]; // Just a rename
-
-        // check if we're at an open valve with a flow >0
-        const valve0IsOpen: boolean = this.ValveState.get(valve0);
-        if (!valve0IsOpen && valve0.Flow > 0) {
-            // Open
-            const nextState = this.Copy();
-            nextState.Open(valve0, data.MaxMinute);
-            nextStates.push(nextState);
-        }
-
-        // Move
-        valve0.Tunnels.forEach(tunneledValve => {
-            const nextState = this.Copy();
-            nextState.Actors[0] = tunneledValve;
-            nextStates.push(nextState);
-        });
-
-        return nextStates;
-    }
 }
 
 class ActionData {
@@ -241,27 +173,24 @@ class ActionData {
         if (state.FutureFlow > this.TotalFlow) {
             this.TotalFlow = state.FutureFlow;
             this.SaveStateStack();
-            console.log(this.TotalFlow);
+            //console.log(this.TotalFlow);
         }
     }
 }
-
-
 
 // data is mutated
 const Act = (data: ActionData): void => {
     const state = data.StateStack[data.StateStack.length - 1];
 
     // Check Memo
-    ///*
+    
     const valveMemoKey = state.GetMemoKey();
     let valveMemoValue = data.ValveMemo.get(valveMemoKey);
     if (valveMemoValue && valveMemoValue >= state.FutureFlow) {
         return;
     }
     data.ValveMemo.set(valveMemoKey, state.FutureFlow);
-    //*/
-
+    
     const idealFuture = state.FindIdealFuture(data);
     if (state.FutureFlow + idealFuture <= data.TotalFlow) {
         return;
@@ -278,73 +207,75 @@ const Act = (data: ActionData): void => {
 
     let nextStates = [];
 
-    // This is wrong for multiple actors
-    // if they're at the same valve
+    const actor0 = actState.Actors[0];
+    const actor0ShouldOpen: boolean = !actState.ValveState.get(actor0) && actor0.Flow > 0;
 
-    // if (actState.Actors.length === 1) {
-    //   nextStates = state.CalculateNextStates(data);
-    // } else {
-        // const valve0 = actState.Actors[0]; // Just a rename
-        // const valve1 = actState.Actors[1]; // Just a rename
-        // const sameValve = valve0 === valve1;
+    if (actState.Actors.length === 1) {
+        // Part 1
 
-        // const nextStatesActor0: State[] = state.CalculateNextStates(data);
-        // const nextStatesActor1: State[] = state.CalculateNextStates(data);
-
-        // // Permutate
-        // nextStatesActor0.forEach(state0=>{
-        //     nextStatesActor1.forEach(state1=>{
-                
-        //     });
-        // });
-
-
-
-        //let movers = [...actState.Actors];
-
-        // //let nextStateOpen: State = null;
-        // if (sameValve) {
-        //     // just have actor0 open it
-        //     const valveIsOpen: boolean = actState.ValveState.get(valve0);
-        //     if (!valveIsOpen && valve0.Flow > 0) {
-        //         // Open
-        //         const nextStateOpen: State = actState.Copy();
-        //         nextStateOpen.Open(valve0, data.MaxMinute);
-        //         //nextStates.push(nextState);
-
-        //         // Move (actor1 can still move)
-        //         valve1.Tunnels.forEach(tunneledValve => {
-        //             const nextState = nextStateOpen.Copy();
-        //             nextState.Actors[1] = tunneledValve;
-        //             nextStates.push(nextState);
-        //         });
-        //     }
-        // } else {
-        //     //
-        // }
-
-   // }
-
-    actState.Actors.forEach((actor, actorIndex) => {
-        const valve = actor; // Just a rename
-
-        // check if we're at an open valve with a flow >0
-        const valveIsOpen: boolean = actState.ValveState.get(actor);
-        if (!valveIsOpen && valve.Flow > 0) {
+        if (actor0ShouldOpen) {
             // Open
             const nextState = actState.Copy();
-            nextState.Open(valve, data.MaxMinute);
+            nextState.Open(actor0, data.MaxMinute);
             nextStates.push(nextState);
         }
 
         // Move
-        valve.Tunnels.forEach(tunneledValve => {
+        actor0.Tunnels.forEach(tunneledValve => {
             const nextState = actState.Copy();
-            nextState.Actors[actorIndex] = tunneledValve;
+            nextState.Actors[0] = tunneledValve;
             nextStates.push(nextState);
         });
+    } else {
+        // Part 2
 
-    });
+        const actor1 = actState.Actors[1];
+        const actor1ShouldOpen: boolean = (actor0 !== actor1) && !actState.ValveState.get(actor1) && actor1.Flow > 0;
+
+        if (actor0ShouldOpen && actor1ShouldOpen) {
+            const nextState = actState.Copy();
+            // Open
+            nextState.Open(actor0, data.MaxMinute);
+            nextState.Open(actor1, data.MaxMinute);
+            nextStates.push(nextState);
+        }
+
+        else if (actor0ShouldOpen && !actor1ShouldOpen) {
+            // Open Actor 0
+            const nextStateTemp = actState.Copy();
+            nextStateTemp.Open(actor0, data.MaxMinute);
+            // Move Actor 1
+            actor1.Tunnels.forEach(tunneledValve => {
+                const nextState = nextStateTemp.Copy();
+                nextState.Actors[1] = tunneledValve;
+                nextStates.push(nextState);
+            });
+        }
+
+        else if (!actor0ShouldOpen && actor1ShouldOpen) {
+            // Open Actor 1
+            const nextStateTemp = actState.Copy();
+            nextStateTemp.Open(actor1, data.MaxMinute);
+            // Move Actor 0
+            actor0.Tunnels.forEach(tunneledValve => {
+                const nextState = nextStateTemp.Copy();
+                nextState.Actors[0] = tunneledValve;
+                nextStates.push(nextState);
+            });
+        }
+
+        else if (!actor0ShouldOpen && !actor1ShouldOpen) {
+            // Move
+            actor0.Tunnels.forEach(tunneledValve0 => {
+                actor1.Tunnels.forEach(tunneledValve1 => {
+                    const nextState = actState.Copy();
+                    nextState.Actors[0] = tunneledValve0;
+                    nextState.Actors[1] = tunneledValve1;
+                    nextStates.push(nextState);
+                });
+            });
+        }
+    }
 
     nextStates.forEach(state => {
         data.StateStack.push(state);
@@ -385,13 +316,7 @@ const part2 = async (input: string): Promise<number | string> => {
     data.StateStack.push(state);
     data.MaxMinute = 26;
     Act(data);
-
-    //const stateStack: State[] = [];
-    //stateStack.push(new State(valves, actors));
-
-    // Then to act, we look at the state and for each actor, move(change the actor to a tunneled valve) or open (change the state's valvestate and update futureflow)
-
-    return data.TotalFlow; // 1458 I assume is wrong.
+    return data.TotalFlow; // 2594
 }
 
 export { part1, part2 };
