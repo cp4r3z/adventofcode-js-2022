@@ -8,7 +8,7 @@ const tinput = await Input.tinput(__dirname);
 const input = await Input.input(__dirname);
 
 describe('Day 16', () => {
-    xit('Part 1', async () => {
+    it('Part 1', async () => {
         const solution = await part1(tinput);
         expect(solution).toBe(1651);
     });
@@ -20,7 +20,7 @@ describe('Day 16', () => {
 
     xit('Part 2', async () => {
         const solution = await part2(tinput);
-        expect(solution).toBe(20);
+        expect(solution).toBe(1707);
     });
 
     xit('Part 2 (Real Input)', async () => {
